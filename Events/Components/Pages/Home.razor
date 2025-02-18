@@ -1,0 +1,106 @@
+﻿@page "/"
+@using System.Text.Json
+@using Events.Context
+@using Events.Entities
+@inject HttpClient httpClient
+
+<MudGrid Spacing="4">
+    <MudItem xs="12">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary">Check Terminal Availability</MudButton>
+    </MudItem>
+    <MudItem xs="12">
+        <MudDataGrid T="VwEvent" Items="@Events" ReadOnly="@_readOnly"
+                     EditMode="@(_isCellEditMode ? DataGridEditMode.Cell : DataGridEditMode.Form)"
+                     StartedEditingItem="@StartedEditingItem" CanceledEditingItem="@CanceledEditingItem"
+                     CommittedItemChanges="@CommittedItemChanges"
+                     Bordered="true" Dense="true"
+                     EditTrigger="@(_editTriggerRowClick ? DataGridEditTrigger.OnRowClick : DataGridEditTrigger.Manual)"
+                     Striped="true" Hover="true">
+            <Columns>
+                <PropertyColumn Property="x => x.Id"/>
+                <PropertyColumn Property="x => x.Reference"/>
+                <PropertyColumn Property="x => x.DealName" Title="Deal Name"/>
+                <PropertyColumn Property="x => x.Event"/>
+                <PropertyColumn Property="x => x.Region"/>
+                <PropertyColumn Property="x => x.Country"/>
+                <PropertyColumn Property="x => x.TypeOfOperator" Title="Type of Operator"/>
+                <PropertyColumn Property="x => x.OperatorName" Title="Operator Name"/>
+                <PropertyColumn Property="x => x.DealStatus" Title="Deal Status"/>
+                <PropertyColumn Property="x => x.StartDate" Title="Start Date"/>
+                <PropertyColumn Property="x => x.EndDate" Title="End Date"/>
+                <PropertyColumn Property="x => x.ExpectedReturnDate" Title="Expected Return Date"/>
+                <PropertyColumn Property="x => x.ExpectedTerminals" Title="Expected Terminals"/>
+                <PropertyColumn Property="x => x.Days" Editable="false"/>
+                <PropertyColumn Property="x => x.Month" Editable="false"/>
+                <TemplateColumn Hidden="@(_isCellEditMode || _readOnly || _editTriggerRowClick)" CellClass="d-flex justify-end">
+                    <CellTemplate>
+                        <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit"
+                                       OnClick="@context.Actions.StartEditingItemAsync"/>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+
+        <div class="d-flex flex-wrap mt-4">
+            <MudSwitch @bind-Value="_readOnly" Color="Color.Primary">Read Only</MudSwitch>
+            <div class="d-flex justify-start align-center">
+                <p class="mud-typography mud-typography-body1 mud-inherit-text mr-2">Form</p>
+                <MudSwitch @bind-Value="_isCellEditMode" Color="Color.Primary">Cell</MudSwitch>
+            </div>
+            <div class="d-flex justify-start align-center">
+                <p class="mud-typography mud-typography-body1 mud-inherit-text mr-2">Manual</p>
+                <MudSwitch @bind-Value="_editTriggerRowClick" Color="Color.Primary">On Row Click</MudSwitch>
+            </div>
+        </div>
+    </MudItem>
+</MudGrid>
+
+<MudExpansionPanels Style="flex:1">
+    <MudExpansionPanel Text="Show Events">
+        @foreach (var message in _events)
+        {
+            <MudText Typo="@Typo.body2">@message</MudText>
+        }
+        @if (_events.Count > 0)
+        {
+            <div class="d-flex">
+                <MudSpacer/>
+                <MudButton Class="mt-3" ButtonType="ButtonType.Button" Variant="Variant.Filled"
+                           OnClick="@(() => _events.Clear())">Clear
+                </MudButton>
+            </div>
+        }
+    </MudExpansionPanel>
+</MudExpansionPanels>
+
+@code {
+    private List<VwEvent> Events = new();
+    private readonly List<string> _events = new();
+ 
+    private bool _readOnly;
+    private bool _isCellEditMode;
+    private bool _editTriggerRowClick;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var context = new EventsDbContext();
+        Events = context.VwEvents.ToList();
+    }
+
+    // events
+    void StartedEditingItem(VwEvent item)
+    {
+        _events.Insert(0, $"Event = StartedEditingItem, Data = {JsonSerializer.Serialize(item)}");
+    }
+
+    void CanceledEditingItem(VwEvent item)
+    {
+        _events.Insert(0, $"Event = CanceledEditingItem, Data = {JsonSerializer.Serialize(item)}");
+    }
+
+    void CommittedItemChanges(VwEvent item)
+    {
+        _events.Insert(0, $"Event = CommittedItemChanges, Data = {JsonSerializer.Serialize(item)}");
+    }
+
+}
