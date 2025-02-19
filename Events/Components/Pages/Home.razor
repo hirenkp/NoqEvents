@@ -1,6 +1,6 @@
 ﻿@page "/"
-@using System.Text.Json
-@using Events.Entities
+@rendermode @(new InteractiveServerRenderMode(false))
+
 
 @inject EventsService _eventsService;
 
@@ -227,7 +227,7 @@
         // };
     }
     
-    void ShowTerminalAvailabiliyyForm()
+    void ShowTerminalAvailabilityForm()
     {
         _dailyTerminalAvailability = null;
         _isTerminalAvailabilityFormVisible = true;
