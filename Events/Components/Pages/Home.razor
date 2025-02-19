@@ -1,23 +1,20 @@
 ﻿@page "/"
 @using System.Text.Json
-@using Events.Context
 @using Events.Entities
-@inject HttpClient httpClient
+
+@inject EventsService _eventsService;
 
 <MudGrid Spacing="4">
     <MudItem xs="12">
-        <MudButton Variant="Variant.Filled" Color="Color.Primary">Check Terminal Availability</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@ShowTerminalAvailabiliyyForm">Check Terminal Availability</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="@ShowAddEventForm">Add Event</MudButton>
     </MudItem>
     <MudItem xs="12">
-        <MudDataGrid T="VwEvent" Items="@Events" ReadOnly="@_readOnly"
-                     EditMode="@(_isCellEditMode ? DataGridEditMode.Cell : DataGridEditMode.Form)"
-                     StartedEditingItem="@StartedEditingItem" CanceledEditingItem="@CanceledEditingItem"
-                     CommittedItemChanges="@CommittedItemChanges"
+        <MudDataGrid T="VwEvent" Items="@_eventsList" ReadOnly="true"
                      Bordered="true" Dense="true"
-                     EditTrigger="@(_editTriggerRowClick ? DataGridEditTrigger.OnRowClick : DataGridEditTrigger.Manual)"
                      Striped="true" Hover="true">
             <Columns>
-                <PropertyColumn Property="x => x.Id"/>
+                <PropertyColumn Property="x => x.Id" Hidden="true"/>
                 <PropertyColumn Property="x => x.Reference"/>
                 <PropertyColumn Property="x => x.DealName" Title="Deal Name"/>
                 <PropertyColumn Property="x => x.Event"/>
@@ -32,75 +29,269 @@
                 <PropertyColumn Property="x => x.ExpectedTerminals" Title="Expected Terminals"/>
                 <PropertyColumn Property="x => x.Days" Editable="false"/>
                 <PropertyColumn Property="x => x.Month" Editable="false"/>
-                <TemplateColumn Hidden="@(_isCellEditMode || _readOnly || _editTriggerRowClick)" CellClass="d-flex justify-end">
+                <TemplateColumn CellClass="d-flex justify-end">
                     <CellTemplate>
                         <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit"
-                                       OnClick="@context.Actions.StartEditingItemAsync"/>
+                                       OnClick="@(() => EditEvent(context.Item.Id))"/>
                     </CellTemplate>
                 </TemplateColumn>
             </Columns>
+            <PagerContent>
+                <MudDataGridPager T="VwEvent" />
+            </PagerContent>
         </MudDataGrid>
-
-        <div class="d-flex flex-wrap mt-4">
-            <MudSwitch @bind-Value="_readOnly" Color="Color.Primary">Read Only</MudSwitch>
-            <div class="d-flex justify-start align-center">
-                <p class="mud-typography mud-typography-body1 mud-inherit-text mr-2">Form</p>
-                <MudSwitch @bind-Value="_isCellEditMode" Color="Color.Primary">Cell</MudSwitch>
-            </div>
-            <div class="d-flex justify-start align-center">
-                <p class="mud-typography mud-typography-body1 mud-inherit-text mr-2">Manual</p>
-                <MudSwitch @bind-Value="_editTriggerRowClick" Color="Color.Primary">On Row Click</MudSwitch>
-            </div>
-        </div>
     </MudItem>
 </MudGrid>
 
-<MudExpansionPanels Style="flex:1">
-    <MudExpansionPanel Text="Show Events">
-        @foreach (var message in _events)
-        {
-            <MudText Typo="@Typo.body2">@message</MudText>
-        }
-        @if (_events.Count > 0)
-        {
-            <div class="d-flex">
-                <MudSpacer/>
-                <MudButton Class="mt-3" ButtonType="ButtonType.Button" Variant="Variant.Filled"
-                           OnClick="@(() => _events.Clear())">Clear
-                </MudButton>
-            </div>
-        }
-    </MudExpansionPanel>
-</MudExpansionPanels>
+<MudOverlay @bind-Visible="_isTerminalAvailabilityFormVisible" DarkBackground="true" AutoClose="false">
+    <MudCard>
+        <MudForm @ref="@_availabilityForm">
+            <MudDatePicker Editable="true" @bind-Date="@_startDate" Label="Start Date" Placeholder="Select Date"></MudDatePicker>
+            <MudDatePicker Editable="true" @bind-Date="@_endDate" Label="EndDate" Placeholder="Select Date"></MudDatePicker>
+            <MudNumericField @bind-Value="@_totalTerminals" Label="Total Available Terminal"></MudNumericField>
+            <MudDataGrid T="DailyTerminalAvailability" Items="@_dailyTerminalAvailability" ReadOnly="true"
+                         Bordered="true" Dense="true"
+                         Striped="true" Hover="true">
+                <Columns>
+                    <PropertyColumn Property="x => x.Date" Title="Date"/>
+                    <PropertyColumn Property="x => x.TotalAssigned" Title="Total Assigned"/>
+                    <PropertyColumn Property="x => x.TotalAvailable" Title="Total Available"/>
+                </Columns>
+                <PagerContent>
+                    <MudDataGridPager T="DailyTerminalAvailability" />
+                </PagerContent>
+            </MudDataGrid>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@QueryTerminalAvailability">Query</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="@CancelQuery">Cancel</MudButton>
+        </MudForm>        
+    </MudCard>
+</MudOverlay>
+
+<MudOverlay @bind-Visible="_isEditFormVisible" DarkBackground="true" AutoClose="false">
+    <MudCard xs="6">
+        <MudForm Model="@_event" @ref="@_form">
+            <MudCardContent>
+                <MudTextField @bind-Value="_event.Reference" For="@(() => _event.Reference)" Label="@nameof(_event.Reference)" />
+                <MudTextField @bind-Value="_event.DealName" For="@(() => _event.DealName)" Label="@nameof(_event.DealName)" />
+                <MudTextField @bind-Value="_event.Event1" For="@(() => _event.Event1)" Label="Event Name" />
+                <MudSelect @bind-Value="_event.CountryId" Label="Country/Region" Required="true" Placeholder="Please select a region">
+                    @if (_countryList != null)
+                    {
+                        foreach (var country in _countryList)
+                        {
+                            <MudSelectItem Value="@country.Id">@country.Country1</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+                <MudSelect @bind-Value="_event.OperatorTypeId" Label="Type of Operator" Required="true" Placeholder="Please select a type of operator">
+                    @if (_operatorTypeList != null)
+                    {
+                        foreach (var operatorType in _operatorTypeList)
+                        {
+                            <MudSelectItem Value="@operatorType.Id">@operatorType.Type</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+                <MudSelect @bind-Value="_event.OperatorId" Label="Operator Name" Required="true" Placeholder="Please select a operator">
+                    @if (_operatorList != null)
+                    {
+                        foreach (var operatorName in _operatorList)
+                        {
+                            <MudSelectItem Value="@operatorName.Id">@operatorName.Name</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+                <MudSelect @bind-Value="_event.DealStatusId" Label="Deal Status" Required="true" Placeholder="Please select status of deal">
+                    @if (_dealStatusList != null)
+                    {
+                        foreach (var dealStatus in _dealStatusList)
+                        {
+                            <MudSelectItem Value="@dealStatus.Id">@dealStatus.Status</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+                <MudDatePicker Editable="true" @bind-Date="_event.StartDate" Label="Start Date" Placeholder="Select Date"></MudDatePicker>
+                <MudDatePicker Editable="true" @bind-Date="_event.EndDate" Label="EndDate" Placeholder="Select Date"></MudDatePicker>
+                <MudDatePicker Editable="true" @bind-Date="_event.ExpectedReturnDate" Label="Expected Return Date" Placeholder="Select Date"></MudDatePicker>
+                <MudNumericField @bind-Value="_event.ExpectedTerminals" Label="Expected Terminals"></MudNumericField>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@SaveChanges">Save</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="@CancelChanges">Cancel</MudButton>
+            </MudCardContent>
+        </MudForm>
+    </MudCard>
+</MudOverlay>
+
+<MudOverlay @bind-Visible="_isAddFormVisible" DarkBackground="true" AutoClose="false">
+    <MudCard>
+        <MudForm Model="@_event" @ref="@_formAdd">
+            <MudCardContent>
+                <MudTextField @bind-Value="_event.Reference" For="@(() => _event.Reference)" Label="@nameof(_event.Reference)" />
+                <MudTextField @bind-Value="_event.DealName" For="@(() => _event.DealName)" Label="@nameof(_event.DealName)" />
+                <MudTextField @bind-Value="_event.Event1" For="@(() => _event.Event1)" Label="Event Name" />
+                <MudSelect @bind-Value="_event.CountryId" Label="Country/Region" Required="true" Placeholder="Please select a region">
+                    @if (_countryList != null)
+                    {
+                        foreach (var country in _countryList)
+                        {
+                            <MudSelectItem Value="@country.Id">@country.Country1</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+                <MudSelect @bind-Value="_event.OperatorTypeId" Label="Type of Operator" Required="true" Placeholder="Please select a type of operator">
+                    @if (_operatorTypeList != null)
+                    {
+                        foreach (var operatorType in _operatorTypeList)
+                        {
+                            <MudSelectItem Value="@operatorType.Id">@operatorType.Type</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+                <MudSelect @bind-Value="_event.OperatorId" Label="Operator Name" Required="true" Placeholder="Please select a operator">
+                    @if (_operatorList != null)
+                    {
+                        foreach (var operatorName in _operatorList)
+                        {
+                            <MudSelectItem Value="@operatorName.Id">@operatorName.Name</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+                <MudSelect @bind-Value="_event.DealStatusId" Label="Deal Status" Required="true" Placeholder="Please select status of deal">
+                    @if (_dealStatusList != null)
+                    {
+                        foreach (var dealStatus in _dealStatusList)
+                        {
+                            <MudSelectItem Value="@dealStatus.Id">@dealStatus.Status</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+                <MudDatePicker Editable="true" @bind-Date="_event.StartDate" Label="Start Date" Placeholder="Select Date"></MudDatePicker>
+                <MudDatePicker Editable="true" @bind-Date="_event.EndDate" Label="EndDate" Placeholder="Select Date"></MudDatePicker>
+                <MudDatePicker Editable="true" @bind-Date="_event.ExpectedReturnDate" Label="Expected Return Date" Placeholder="Select Date"></MudDatePicker>
+                <MudNumericField @bind-Value="_event.ExpectedTerminals" Label="Expected Terminals"></MudNumericField>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@SaveNewEvent">Save</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="@CancelAdd">Cancel</MudButton>
+            </MudCardContent>
+        </MudForm>
+    </MudCard>
+</MudOverlay>
 
 @code {
-    private List<VwEvent> Events = new();
+    private IEnumerable<VwEvent>? _eventsList;
     private readonly List<string> _events = new();
  
-    private bool _readOnly;
-    private bool _isCellEditMode;
-    private bool _editTriggerRowClick;
+    private bool _isEditFormVisible;
+    private bool _isTerminalAvailabilityFormVisible;
+
+    private MudForm _form;
+    private MudForm _availabilityForm;
+
+    private Event _event; // currently selected event from data grid
+
+    private IEnumerable<Country>? _countryList;
+    private IEnumerable<DealStatus>? _dealStatusList;
+    private IEnumerable<Operator>? _operatorList;
+    private IEnumerable<OperatorType>? _operatorTypeList;
+    
+    private DateTime? _startDate = DateTime.Today;
+    private DateTime? _endDate = DateTime.Today;
+    private int _totalTerminals = 300;
+    
+    private IEnumerable<DailyTerminalAvailability>? _dailyTerminalAvailability;
+    private bool _isAddFormVisible;
+    private MudForm _formAdd;
 
     protected override async Task OnInitializedAsync()
     {
-        var context = new EventsDbContext();
-        Events = context.VwEvents.ToList();
+        _eventsList = await _eventsService.GetAllEvents();
+        _countryList = await _eventsService.GetAllCountries();
+        _dealStatusList = await _eventsService.GetAllDealStatuses();
+        _operatorList = await _eventsService.GetAllOpearators();
+        _operatorTypeList = await _eventsService.GetAllOpearatorTypes();
+        
+        _isEditFormVisible = false;
+        
+        // _event = new Event()
+        // {
+        //     Id = 1, 
+        //     Reference = "28416120910", 
+        //     DealName = "Sail GP Season 5 - Merch - Auckland",
+        //     Event1 = "Sail GP Season 5 - Merch - Auckland",
+        //     CountryId = 151,
+        //     OperatorTypeId = 3,
+        //     OperatorId = 1,
+        //     DealStatusId = 3,
+        //     StartDate = DateTime.Parse("2025-01-18"),
+        //     EndDate = DateTime.Parse("2025-01-19"),
+        //     ExpectedReturnDate = DateTime.Parse("2005-01-21"),
+        //     ExpectedTerminals = 9
+        // };
+    }
+    
+    void ShowTerminalAvailabiliyyForm()
+    {
+        _dailyTerminalAvailability = null;
+        _isTerminalAvailabilityFormVisible = true;
     }
 
-    // events
-    void StartedEditingItem(VwEvent item)
+    private void SaveChanges()
     {
-        _events.Insert(0, $"Event = StartedEditingItem, Data = {JsonSerializer.Serialize(item)}");
+        VwEvent vwEvent = _eventsList.FirstOrDefault(e => e.Id == _event.Id);
+        vwEvent.Event = _event.Event1;
+        vwEvent.Country = _countryList.FirstOrDefault(c => c.Id == _event.CountryId).Country1 ?? string.Empty;
+        vwEvent.Reference = _event.Reference;
+        vwEvent.DealName = _event.DealName;
+        vwEvent.Region = _countryList.FirstOrDefault(c => c.Id == _event.CountryId).CountryCode ?? string.Empty;
+        vwEvent.TypeOfOperator = _operatorTypeList.FirstOrDefault(ot => ot.Id == _event.OperatorTypeId).Type ?? string.Empty;
+        vwEvent.OperatorName = _operatorList.FirstOrDefault(o => o.Id == _event.OperatorId).Name ?? string.Empty;
+        vwEvent.DealStatus = _dealStatusList.FirstOrDefault(ds => ds.Id == _event.DealStatusId).Status ?? string.Empty;
+        vwEvent.StartDate = _event.StartDate;
+        vwEvent.EndDate = _event.EndDate;
+        vwEvent.ExpectedReturnDate = _event.ExpectedReturnDate;
+        vwEvent.ExpectedTerminals = _event.ExpectedTerminals;
+        vwEvent.Days = (_event.EndDate.Value - _event.StartDate.Value).Days + 1;
+        vwEvent.Month = _event.StartDate.Value.ToString("MMMM");
+        
+        
+        _eventsService.UpdateEvent(_event.Id, _event);
+        _isEditFormVisible = false;
     }
 
-    void CanceledEditingItem(VwEvent item)
+    private async Task EditEvent(int id)
     {
-        _events.Insert(0, $"Event = CanceledEditingItem, Data = {JsonSerializer.Serialize(item)}");
+        _event = await _eventsService.GetEventById(id);
+        if (_event != null)
+            _isEditFormVisible = true;
     }
 
-    void CommittedItemChanges(VwEvent item)
+    private void CancelChanges()
     {
-        _events.Insert(0, $"Event = CommittedItemChanges, Data = {JsonSerializer.Serialize(item)}");
+        _isEditFormVisible = false;
+    }
+
+    private async Task QueryTerminalAvailability()
+    {
+        _dailyTerminalAvailability = await _eventsService.GetDailyTerminalAvailabilitiesBetweenDates(_startDate, _endDate, _totalTerminals);
+    }
+
+    private void CancelQuery()
+    {
+        _isTerminalAvailabilityFormVisible = false;
+    }
+
+    private void ShowAddEventForm()
+    {
+        _event = new();
+        _isAddFormVisible = true;
+    }
+
+    private void SaveNewEvent()
+    {
+        throw new NotImplementedException();
+    }
+
+    private void CancelAdd()
+    {
+        _isAddFormVisible = false;
     }
 
 }
