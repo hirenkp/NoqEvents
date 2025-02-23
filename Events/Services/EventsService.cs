@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using Events.Context;
 using Events.Entities;
+using Events.Models;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,22 +16,34 @@ public class EventsService
         _dbContextFactory = dbContextFactory;
     }
 
-    public async Task<IEnumerable<VwEvent>?> GetAllEvents()
+    public async Task<IEnumerable<VwEvent>?> GetAllEventsAsync(bool? isArchived)
     {
         using var db = await _dbContextFactory.CreateDbContextAsync();
-        return await db.VwEvents.ToListAsync();
+        return await db.VwEvents.Where(e => e.IsArchived == isArchived).ToListAsync();
     }
     
-    public async Task<Event?> GetEventById(int id)
+    public async Task<NoqEvent?> GetEventByIdAsync(int id)
     {
         using var db = await _dbContextFactory.CreateDbContextAsync();
-        return await db.Events.FirstOrDefaultAsync(e => e.Id == id);
+        return await db.NoqEvents.FirstOrDefaultAsync(e => e.Id == id);
     }
 
-    public async Task<Event?> UpdateEvent(int id, Event newEvent)
+    public async Task ArchiveEventAsync(int id, bool archiveStatus)
     {
         using var db = await _dbContextFactory.CreateDbContextAsync();
-        var existingEvent = await db.Events.FirstOrDefaultAsync(e => e.Id == id);
+        NoqEvent? e = await db.NoqEvents.FirstOrDefaultAsync(e => e.Id == id);
+        if(e != null)
+        {
+            e.IsArchived = archiveStatus;
+            db.Update(e);
+            await db.SaveChangesAsync();
+        }
+    }
+    
+    public async Task<NoqEvent?> UpdateEventAsync(int id, NoqEvent newEvent)
+    {
+        using var db = await _dbContextFactory.CreateDbContextAsync();
+        var existingEvent = await db.NoqEvents.FirstOrDefaultAsync(e => e.Id == id);
         if (existingEvent != null)
         {
             existingEvent.Reference = newEvent.Reference;
@@ -44,6 +57,7 @@ public class EventsService
             existingEvent.StartDate = newEvent.StartDate;
             existingEvent.ExpectedReturnDate = newEvent.ExpectedReturnDate;
             existingEvent.ExpectedTerminals = newEvent.ExpectedTerminals;
+            existingEvent.ConfirmedTerminals = newEvent.ConfirmedTerminals;
             //db.Update(existingEvent);
             await db.SaveChangesAsync();
             return existingEvent;
@@ -52,39 +66,46 @@ public class EventsService
         return null;
     }
 
-    public async Task<Event> AddEvent(Event newEvent)
+    public async Task<NoqEvent> AddEventAsync(NoqEvent newEvent)
     {
         using var db = await _dbContextFactory.CreateDbContextAsync();
-        db.Events.Add(newEvent);
+        db.NoqEvents.Add(newEvent);
         await db.SaveChangesAsync();
         return newEvent;
     }
+
+    public async Task DeleteEventAsync(int id)
+    {
+        using var db = await _dbContextFactory.CreateDbContextAsync();
+        db.NoqEvents.Remove(await db.NoqEvents.FirstOrDefaultAsync(e => e.Id == id));
+        await db.SaveChangesAsync();
+    }
     
-    public async Task<IEnumerable<Country>> GetAllCountries()
+    public async Task<IEnumerable<Country>> GetAllCountriesAsync()
     {
         using var db = await _dbContextFactory.CreateDbContextAsync();
         return await db.Countries.OrderBy(c => c.Country1).ToListAsync();
     }
 
-    public async Task<IEnumerable<DealStatus>> GetAllDealStatuses()
+    public async Task<IEnumerable<DealStatus>> GetAllDealStatusesAsync()
     {
         using var db = await _dbContextFactory.CreateDbContextAsync();
         return await db.DealStatuses.OrderBy(ds => ds.Status).ToListAsync();
     }
 
-    public async Task<IEnumerable<Operator>> GetAllOpearators()
+    public async Task<IEnumerable<Operator>> GetAllOpearatorsAsync()
     {
         using var db = await _dbContextFactory.CreateDbContextAsync();
         return await db.Operators.OrderBy(o => o.Name).ToListAsync();
     }
 
-    public async Task<IEnumerable<OperatorType>> GetAllOpearatorTypes()
+    public async Task<IEnumerable<OperatorType>> GetAllOpearatorTypesAsync()
     {
         using var db = await _dbContextFactory.CreateDbContextAsync();
         return await db.OperatorTypes.OrderBy(ot => ot.Type).ToListAsync();
     }
 
-    public async Task<IEnumerable<DailyTerminalAvailability>> GetDailyTerminalAvailabilitiesBetweenDates(DateTime? startDate, DateTime? endDate, int totalTerminals)
+    public async Task<IEnumerable<DailyTerminalAvailability>> GetDailyTerminalAvailabilitiesBetweenDatesAsync(DateTime? startDate, DateTime? endDate, int totalTerminals)
     {
         using var db = await _dbContextFactory.CreateDbContextAsync();
         //var results= await db.DailyTerminalAvailabilities.FromSqlInterpolated($"EXEC dbo.spGetTerminalAvailabilityByDateRange {startDate}, {endDate}, {totalTerminals}").ToListAsync();

@@ -1,4 +1,4 @@
-﻿namespace Events.Entities;
+﻿namespace Events.Models;
 
 public partial class DailyTerminalAvailability
 {

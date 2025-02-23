@@ -1,0 +1,136 @@
+﻿<MudForm Model="@Event" @ref="form">
+    <MudGrid gutterSize="3">
+        <!-- Text Fields -->
+        <MudItem xs="12">
+            <MudTextField @bind-Value="Event.Reference" For="@(() => Event.Reference)" Label="Reference" />
+        </MudItem>
+        <MudItem xs="12">
+            <MudTextField @bind-Value="Event.DealName" For="@(() => Event.DealName)" Label="Deal Name" />
+        </MudItem>
+        <MudItem xs="12">
+            <MudTextField @bind-Value="Event.Event1" For="@(() => Event.Event1)" Label="Event Name" Required="true"/>
+        </MudItem>
+
+        <!-- Country/Region Select -->
+        <MudItem xs="12">
+            <MudSelect T="short?" @bind-Value="Event.CountryId" Label="Country/Region" Placeholder="Please select a region">
+                @if (CountryList != null)
+                {
+                    foreach (var country in CountryList)
+                    {
+                        <MudSelectItem T="short?" Value="@country.Id">@country.Country1</MudSelectItem>
+                    }
+                }
+            </MudSelect>
+        </MudItem>
+
+        <!-- Operator Type Select -->
+        <MudItem xs="12">
+            <MudSelect T="short?" @bind-Value="Event.OperatorTypeId" Label="Type of Operator" Placeholder="Please select a type of operator">
+                @if (OperatorTypeList != null)
+                {
+                    foreach (var operatorType in OperatorTypeList)
+                    {
+                        <MudSelectItem T="short?" Value="@operatorType.Id">@operatorType.Type</MudSelectItem>
+                    }
+                }
+            </MudSelect>
+        </MudItem>
+
+        <!-- Operator Name Select -->
+        <MudItem xs="12">
+            <MudSelect T="short?" @bind-Value="Event.OperatorId" Label="Operator Name" Placeholder="Please select an operator">
+                @if (OperatorList != null)
+                {
+                    foreach (var operatorName in OperatorList)
+                    {
+                        <MudSelectItem T="short?" Value="@operatorName.Id">@operatorName.Name</MudSelectItem>
+                    }
+                }
+            </MudSelect>
+        </MudItem>
+
+        <!-- Deal Status Select -->
+        <MudItem xs="12">
+            <MudSelect T="short?" @bind-Value="Event.DealStatusId" Label="Deal Status" Placeholder="Please select status of deal">
+                @if (DealStatusList != null)
+                {
+                    foreach (var dealStatus in DealStatusList)
+                    {
+                        <MudSelectItem T="short?" Value="@dealStatus.Id">@dealStatus.Status</MudSelectItem>
+                    }
+                }
+            </MudSelect>
+        </MudItem>
+
+        <!-- Date Pickers -->
+        <MudItem xs="12" sm="4">
+            <MudDatePicker Editable="true" @bind-Date="Event.StartDate" Label="Start Date" Placeholder="Select Date" Required="true" DateFormat="dd/MM/yyyy" />
+        </MudItem>
+        <MudItem xs="12" sm="4">
+            <MudDatePicker Editable="true" @bind-Date="Event.EndDate" Label="End Date" Placeholder="Select Date" Required="true" DateFormat="dd/MM/yyyy"/>
+        </MudItem>
+        <MudItem xs="12" sm="4">
+            <MudDatePicker Editable="true" @bind-Date="Event.ExpectedReturnDate" Label="Expected Return Date" Placeholder="Select Date" Required="true" DateFormat="dd/MM/yyyy"/>
+        </MudItem>
+
+        <!-- Numeric Field -->
+        <MudItem xs="12">
+            <MudNumericField @bind-Value="Event.ExpectedTerminals" Label="Expected Terminals" Required="true"/>
+        </MudItem>
+
+        <!-- Numeric Field -->
+        <MudItem xs="12">
+            <MudNumericField @bind-Value="Event.ConfirmedTerminals" Label="Confirmed Terminals" Required="true"/>
+        </MudItem>
+        
+        <!-- Action Buttons -->
+        <MudItem xs="12" Class="d-flex justify-end mt-4">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit">@(IsEditMode ? "Update" : "Save")</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="CancelChanges" Class="ml-2">Cancel</MudButton>
+        </MudItem>
+    </MudGrid>
+</MudForm>
+
+@code {
+    // The event entity passed from the parent.
+    [Parameter]
+    public NoqEvent Event { get; set; } = new NoqEvent();
+
+    // Lookup lists for dropdowns.
+    [Parameter]
+    public IEnumerable<Country>? CountryList { get; set; }
+    [Parameter]
+    public IEnumerable<OperatorType>? OperatorTypeList { get; set; }
+    [Parameter]
+    public IEnumerable<Operator>? OperatorList { get; set; }
+    [Parameter]
+    public IEnumerable<DealStatus>? DealStatusList { get; set; }
+
+    // Callback when save is clicked and the form is valid.
+    [Parameter]
+    public EventCallback<NoqEvent> OnSubmit { get; set; }
+
+    // Callback when cancel is clicked.
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    [Parameter]
+    public bool IsEditMode { get; set; }
+
+    private MudForm? form;
+
+    private async Task Submit()
+    {
+        await form!.Validate();
+        if (form.IsValid)
+        {
+            await OnSubmit.InvokeAsync(Event);
+        }
+    }
+
+    private async Task CancelChanges()
+    {
+        await OnCancel.InvokeAsync();
+    }
+}
