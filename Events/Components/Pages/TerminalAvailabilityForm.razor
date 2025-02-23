@@ -1,0 +1,73 @@
+﻿<MudForm @ref="form">
+    <MudGrid gutterSize="3">
+        <MudItem xs="12" sm="6">
+            <MudDatePicker Editable="true" @bind-Date="Entity!.StartDate"
+                           Label="Start Date" Placeholder="Select Date" />
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudDatePicker Editable="true" @bind-Date="Entity!.EndDate"
+                           Label="End Date" Placeholder="Select Date" />
+        </MudItem>
+        <MudItem xs="12">
+            <MudNumericField @bind-Value="Entity!.TotalTerminals"
+                             Label="Total Available Terminal" />
+        </MudItem>
+
+        @if (showGrid)
+        {
+            <MudItem xs="12">
+                <MudDataGrid T="DailyTerminalAvailability" Items="Entity!.DailyTerminalAvailability"
+                             ReadOnly="true" Bordered="true" Dense="true" Striped="true" Hover="true">
+                    <Columns>
+                        <PropertyColumn Property="x => x.Date" Title="Date" />
+                        <PropertyColumn Property="x => x.TotalAssigned" Title="Total Assigned" />
+                        <PropertyColumn Property="x => x.TotalAvailable" Title="Total Available" />
+                    </Columns>
+                    <PagerContent>
+                        <MudDataGridPager T="DailyTerminalAvailability" />
+                    </PagerContent>
+                </MudDataGrid>
+            </MudItem>
+        }
+
+        <MudItem xs="12" Class="d-flex justify-end mt-4">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Query">Query</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="Cancel" Class="ml-2">Cancel</MudButton>
+        </MudItem>
+    </MudGrid>
+</MudForm>
+
+@code {
+    // The entity parameter that contains all the form data.
+    [Parameter]
+    public TerminalAvailabilityParameters? Entity { get; set; }
+
+    // Callback when the Query button is clicked and the form is valid.
+    [Parameter]
+    public EventCallback<TerminalAvailabilityParameters> OnQuery { get; set; }
+
+    // Callback when the Cancel button is clicked.
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    private MudForm? form;
+    private bool showGrid = false;
+
+    private async Task Query()
+    {
+        await form!.Validate();
+        if (form.IsValid)
+        {
+            // Show the data grid only after a successful query.
+            showGrid = true;
+            await OnQuery.InvokeAsync(Entity);
+        }
+    }
+
+    private async Task Cancel()
+    {
+        // Hide the data grid and invoke the cancel callback.
+        showGrid = false;
+        await OnCancel.InvokeAsync();
+    }
+}
