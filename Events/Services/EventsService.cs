@@ -77,7 +77,7 @@ public class EventsService
     public async Task DeleteEventAsync(int id)
     {
         using var db = await _dbContextFactory.CreateDbContextAsync();
-        db.NoqEvents.Remove(await db.NoqEvents.FirstOrDefaultAsync(e => e.Id == id));
+        db.NoqEvents.Remove((await db.NoqEvents.FirstOrDefaultAsync(e => e.Id == id))!);
         await db.SaveChangesAsync();
     }
     
