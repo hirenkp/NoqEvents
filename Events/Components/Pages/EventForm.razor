@@ -64,11 +64,9 @@
         </MudItem>
 
         <!-- Date Pickers -->
-        <MudItem xs="12" sm="4">
-            <MudDatePicker Editable="true" @bind-Date="Event.StartDate" Label="Start Date" Placeholder="Select Date" Required="true" DateFormat="dd/MM/yyyy" />
-        </MudItem>
-        <MudItem xs="12" sm="4">
-            <MudDatePicker Editable="true" @bind-Date="Event.EndDate" Label="End Date" Placeholder="Select Date" Required="true" DateFormat="dd/MM/yyyy"/>
+        <MudItem xs="12" sm="8">
+            <MudDateRangePicker @ref="@_datePicker" DateRange="@_dateRange" Margin="Margin.Dense" ReadOnly="false" Clearable="true"
+                                PlaceholderStart="Start Date" PlaceholderEnd="End Date" Label="Range" DateRangeChanged="@OnDateRangeChanged"/>
         </MudItem>
         <MudItem xs="12" sm="4">
             <MudDatePicker Editable="true" @bind-Date="Event.ExpectedReturnDate" Label="Expected Return Date" Placeholder="Select Date" Required="true" DateFormat="dd/MM/yyyy"/>
@@ -119,12 +117,23 @@
     public bool IsEditMode { get; set; }
 
     private MudForm? form;
+    private DateRange _dateRange;
+    private MudDateRangePicker _datePicker;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        _dateRange = new DateRange(Event.StartDate, Event.EndDate);
+    }
 
     private async Task Submit()
     {
         await form!.Validate();
         if (form.IsValid)
         {
+            Event.StartDate = _dateRange.Start;
+            Event.EndDate = _dateRange.End;
             await OnSubmit.InvokeAsync(Event);
         }
     }
@@ -133,4 +142,12 @@
     {
         await OnCancel.InvokeAsync();
     }
+    
+    private void OnDateRangeChanged(DateRange dateRange)
+    {
+        _dateRange = dateRange;
+        if(Event.ExpectedReturnDate is null || Event.ExpectedReturnDate < dateRange.End)
+            Event.ExpectedReturnDate = dateRange.End?.AddDays(1);
+    }
+
 }

@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using MudBlazor.Extensions
 
 @inject EventsService _eventsService
 @inject IDialogService _dialogService
@@ -31,72 +32,85 @@
 
             <!-- Data Grid -->
             <MudItem xs="12">
-                @if (_isLoading)
-                {
-                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-2" />
-                }
-                else if (_eventsList == null || !_eventsList.Any())
-                {
-                    <MudAlert Severity="Severity.Info" Class="my-2">No events found. Click "Add New Event" to create your first event.</MudAlert>
-                }
-                
                 <MudDataGrid @ref="@_dataGrid" T="VwEvent" 
                              Loading="@_isLoading" ReadOnly="true"
                              Bordered="true" Dense="true" Striped="true" Hover="true"
-                             Filterable="true" Groupable="true" FixedFooter="true" FixedHeader="true"
+                             Filterable="true" Groupable="true"
                              ServerData="ServerReload"
-                             Height="70vh" Class="mt-2">
+                             Class="mt-2">
                     <ToolBarContent>
-                        <MudText Typo="Typo.h6">Periodic Elements</MudText>
+                        <MudText Typo="Typo.h6">Results</MudText>
                         <MudSpacer />
                         <MudTextField T="string" ValueChanged="@(s=>OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
                                       AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
                     </ToolBarContent>
+                    <NoRecordsContent>
+                        <MudAlert Severity="Severity.Info" Class="my-2">@(_showArchivedEvents ? "No archived events found" : "No events found. Click \"Add New Event\" to create your first event.")</MudAlert>               
+                    </NoRecordsContent>
+                    <LoadingContent>
+                        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-2" />    
+                    </LoadingContent>
                     <Columns>
+                        <HierarchyColumn T="VwEvent" />
                         <PropertyColumn Property="x => x.Id" Hidden="true"/>
                         <PropertyColumn Property="x => x.Reference" Title="Reference" Sortable="true" />
                         <PropertyColumn Property="x => x.DealName" Title="Deal Name" Sortable="true" />
                         <PropertyColumn Property="x => x.Event" Title="Event" Sortable="true" />
-                        <PropertyColumn Property="x => x.Region" Title="Region" Sortable="true" />
-                        <PropertyColumn Property="x => x.Country" Title="Country" Sortable="true" />
-                        <PropertyColumn Property="x => x.TypeOfOperator" Title="Type of Operator" Sortable="true" />
-                        <PropertyColumn Property="x => x.OperatorName" Title="Operator Name" Sortable="true" />
-                        <PropertyColumn Property="x => x.DealStatus" Title="Deal Status" Sortable="true" />
                         <PropertyColumn Property="x => x.StartDate" Title="Start Date" Format="dd/MM/yyyy" Sortable="true" />
                         <PropertyColumn Property="x => x.EndDate" Title="End Date" Format="dd/MM/yyyy" Sortable="true" />
                         <PropertyColumn Property="x => x.ExpectedReturnDate" Title="Expected Return Date" Format="dd/MM/yyyy" Sortable="true" />
+                        <PropertyColumn Property="x => x.Days" Title="Days" Sortable="true" />
                         <PropertyColumn Property="x => x.ExpectedTerminals" Title="Expected Terminals" Sortable="true" />
                         <PropertyColumn Property="x => x.ConfirmedTerminals" Title="Confirmed Terminals" Sortable="true" />
-                        <PropertyColumn Property="x => x.Days" Title="Days" Sortable="true" />
-                        <PropertyColumn Property="x => x.Month" Title="Month" Sortable="true" />
-                        <PropertyColumn Property="x => x.StartDate" Title="Year" Format="yyyy" Sortable="true" />
-                        <TemplateColumn Title="Actions">
+                        <TemplateColumn Title="Actions" >
                             <CellTemplate>
                                 <div class="d-flex gap-1">
                                     <MudTooltip Text="Edit">
                                         <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit"
-                                                      Color="Color.Primary"
-                                                      OnClick="@(() => EditEvent(context.Item.Id))"/>
+                                                       Color="Color.Primary"
+                                                       OnClick="@(() => EditEvent(context.Item.Id))"/>
                                     </MudTooltip>
                                     <MudTooltip Text="@(_showArchivedEvents ? "Un-Archive" : "Archive")">
-                                        <MudIconButton Size="Size.Small" 
-                                                      Icon="@Icons.Material.Filled.Archive"
-                                                      Color="Color.Warning"
-                                                      OnClick="@(() => ConfirmArchive(context.Item.Id))"/>
+                                        <MudIconButton Size="Size.Small"
+                                                       Icon="@Icons.Material.Filled.Archive"
+                                                       Color="Color.Warning"
+                                                       OnClick="@(() => ConfirmArchive(context.Item.Id))"/>
                                     </MudTooltip>
                                     @if (_showArchivedEvents)
                                     {
                                         <MudTooltip Text="Delete Event">
-                                            <MudIconButton Size="Size.Small" 
-                                                          Icon="@Icons.Material.Filled.Delete"
-                                                          Color="Color.Error"
-                                                          OnClick="@(() => ConfirmDelete(context.Item.Id))"/>
+                                            <MudIconButton Size="Size.Small"
+                                                           Icon="@Icons.Material.Filled.Delete"
+                                                           Color="Color.Error"
+                                                           OnClick="@(() => ConfirmDelete(context.Item.Id))"/>
                                         </MudTooltip>
                                     }
                                 </div>
                             </CellTemplate>
                         </TemplateColumn>
                     </Columns>
+                    <ChildRowContent>
+                        <MudGrid Class="px-2 py-1">
+                            @foreach (var field in new (string Label, object? Value)[]
+                                          {
+                                              ("Region", context.Item.Region),
+                                              ("Country", context.Item.Country),
+                                              ("Type of Operator", context.Item.TypeOfOperator),
+                                              ("Operator Name", context.Item.OperatorName),
+                                              ("Deal Status", context.Item.DealStatus),
+                                              ("Month", context.Item.Month),
+                                              ("Year", context.Item.StartDate?.ToString("yyyy"))
+                                          })
+                            {
+                                <MudItem Style="width: auto; white-space: nowrap;">
+                                    <MudText Class="fw-bold text-primary" Style="font-weight: bold !important;">@field.Label:</MudText>
+                                </MudItem>
+                                <MudItem Class="flex-grow-1">
+                                    <MudText>@field.Value</MudText>
+                                </MudItem>
+                            }
+                        </MudGrid>
+                    </ChildRowContent>
                     <PagerContent>
                         <div class="d-flex gap-2 align-center">
                             <MudTooltip Text="Reset Grid State">
@@ -255,7 +269,8 @@
             await _eventsService.UpdateEventAsync(_event.Id, _event);
             
             // Update the view model to reflect changes
-            await RefreshEventsList();
+            //await RefreshEventsList();
+            await _dataGrid.ReloadServerData();
             
             _isEditFormVisible = false;
             
@@ -311,11 +326,11 @@
     {
         _event = new NoqEvent {
             StartDate = DateTime.Today,
-            EndDate = DateTime.Today.AddDays(7),
-            ExpectedReturnDate = DateTime.Today.AddDays(14)
+            EndDate = DateTime.Today.AddDays(1),
+            ExpectedReturnDate = DateTime.Today.AddDays(2)
         };
         _isEditMode = false;
-        _isEditFormVisible = true;
+        _isAddFormVisible = true;
     }
 
     private async Task HandleSaveNewEvent()
@@ -327,9 +342,10 @@
             await _eventsService.AddEventAsync(_event);
             
             // Refresh the events list to include the new event
-            await RefreshEventsList();
+            //await RefreshEventsList();
+            await _dataGrid.ReloadServerData();
             
-            _isEditFormVisible = false;
+            _isAddFormVisible = false;
             
             _snackbar.Add("New event added successfully", Severity.Success);
         }
@@ -358,7 +374,8 @@
             await _eventsService.ArchiveEventAsync(itemId, !_showArchivedEvents);
             
             // Refresh the events list
-            await RefreshEventsList();
+            //await RefreshEventsList();
+            await _dataGrid.ReloadServerData();
             
             string action = _showArchivedEvents ? "un-archived" : "archived";
             _snackbar.Add($"Event {action} successfully", Severity.Success);
@@ -379,8 +396,7 @@
         {
             { "ContentText", _showArchivedEvents ? "Are you sure you want to un-archive this event?" : "Are you sure you want to archive this event?" },
             { "ButtonText", _showArchivedEvents ? "Un-Archive" : "Archive" },
-            { "CancelText", "Cancel" },
-            { "Color", Color.Warning }
+            { "CancelText", "Cancel"}
         };
 
         var options = new DialogOptions { 
@@ -409,7 +425,8 @@
             await _eventsService.DeleteEventAsync(itemId);
             
             // Refresh the events list
-            await RefreshEventsList();
+            //await RefreshEventsList();
+            await _dataGrid.ReloadServerData();
             
             _snackbar.Add("Event permanently deleted", Severity.Success);
         }
@@ -428,8 +445,7 @@
         {
             { "ContentText", "Are you sure you want to permanently delete this event? This action cannot be undone." },
             { "ButtonText", "Delete Event" },
-            { "CancelText", "Cancel" },
-            { "Color", Color.Error }
+            { "CancelText", "Cancel" }
         };
 
         var options = new DialogOptions { 
@@ -457,7 +473,8 @@
         try {
             _isLoading = true;
             _showArchivedEvents = archiveStatus;
-            await RefreshEventsList();
+            //await RefreshEventsList();
+            await _dataGrid.ReloadServerData();
             
             _snackbar.Add(_showArchivedEvents 
                 ? "Showing archived events" 
@@ -483,7 +500,6 @@
         if (_dataGrid != null)
         {
             await _dataGrid.ClearFiltersAsync();
-            //await _dataGrid
             //await _dataGrid;
             
             _snackbar.Add("Grid filters have been reset", Severity.Info);
@@ -505,25 +521,37 @@
     private async Task<GridData<VwEvent>> ServerReload(GridState<VwEvent> state)
     {
         _eventsList = await _eventsService.GetAllEventsAsync(_showArchivedEvents);
-        _eventsList = _eventsList.Where(ev =>
-        {
-            if (string.IsNullOrWhiteSpace(_searchString))
-                return true;
-            if (ev.DealName.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
-                return true;
-            if (ev.Event.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
-                return true;
-            return false;
-        }).ToArray();
+        if(!string.IsNullOrEmpty(_searchString) && _eventsList.Count() > 0)
+            _eventsList = _eventsList.Where(ev => (ev.DealName is not null && ev.DealName.Contains(_searchString, StringComparison.InvariantCultureIgnoreCase)) || (ev.Event is not null && ev.Event.Contains(_searchString, StringComparison.InvariantCultureIgnoreCase)) );
+        
+        // _eventsList = _eventsList.Where(ev =>
+        // {
+        //     if (string.IsNullOrWhiteSpace(_searchString))
+        //         return true;
+        //     if (ev.DealName.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+        //         return true;
+        //     if (ev.Event.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+        //         return true;
+        //     return false;
+        // }).ToArray();
+        
         var totalItems = _eventsList.Count();
+        IEnumerable<VwEvent> pagedData = Enumerable.Empty<VwEvent>();
 
         var sortDefinition = state.SortDefinitions.FirstOrDefault();
+
+        if (totalItems > 0)
+        {
+            pagedData = _eventsList.Skip(state.Page * state.PageSize).Take(state.PageSize);
+        }
+
+        //_dataGrid.Items = pagedData;
         
-        var pagedData = _eventsList.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
-        return new GridData<VwEvent> {
+        return new GridData<VwEvent>
+        {
             TotalItems = totalItems,
             Items = pagedData
-        };        
+        };
     }
 
 }

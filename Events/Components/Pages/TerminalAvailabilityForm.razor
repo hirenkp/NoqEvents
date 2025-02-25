@@ -1,14 +1,10 @@
 ﻿<MudForm @ref="form">
     <MudGrid gutterSize="3">
-        <MudItem xs="12" sm="6">
-            <MudDatePicker Editable="true" @bind-Date="Entity!.StartDate"
-                           Label="Start Date" Placeholder="Select Date" />
+        <MudItem xs="12" sm="12" md="12">
+            <MudDateRangePicker @bind-DateRange="@_dateRange" Margin="Margin.Dense" ReadOnly="false" Clearable="true"
+                                PlaceholderStart="Start Date" PlaceholderEnd="End Date" Label="Range"/>
         </MudItem>
-        <MudItem xs="12" sm="6">
-            <MudDatePicker Editable="true" @bind-Date="Entity!.EndDate"
-                           Label="End Date" Placeholder="Select Date" />
-        </MudItem>
-        <MudItem xs="12">
+         <MudItem xs="12" sm="4" md="2">
             <MudNumericField @bind-Value="Entity!.TotalTerminals"
                              Label="Total Available Terminal" />
         </MudItem>
@@ -52,6 +48,7 @@
 
     private MudForm? form;
     private bool showGrid = false;
+    private DateRange _dateRange = new DateRange(DateTime.Today, DateTime.Today.AddDays(1));
 
     private async Task Query()
     {
@@ -60,6 +57,8 @@
         {
             // Show the data grid only after a successful query.
             showGrid = true;
+            Entity!.StartDate = _dateRange.Start;
+            Entity.EndDate = _dateRange.End;
             await OnQuery.InvokeAsync(Entity);
         }
     }

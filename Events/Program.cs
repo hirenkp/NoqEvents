@@ -3,6 +3,7 @@ using Events.Context;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 using Events.Services;
+using MudBlazor;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHttpClient();
@@ -16,6 +17,10 @@ var cs = builder.Configuration.GetConnectionString("Default");
 builder.Services.AddDbContextFactory<EventsDbContext>(options =>
 {
     options.UseSqlServer(cs);
+});
+
+builder.Services.AddMudServices(config => {
+    config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomRight;
 });
 
 builder.Services.AddScoped<EventsService>();
