@@ -182,7 +182,7 @@
     private IEnumerable<Operator>? _operatorList;
     private IEnumerable<OperatorType>? _operatorTypeList;
 
-    private string _searchString;
+    private string? _searchString;
     
     private TerminalAvailabilityParameters _availability = new()
     {
@@ -270,7 +270,7 @@
             
             // Update the view model to reflect changes
             //await RefreshEventsList();
-            await _dataGrid.ReloadServerData();
+            await _dataGrid!.ReloadServerData();
             
             _isEditFormVisible = false;
             
@@ -343,7 +343,7 @@
             
             // Refresh the events list to include the new event
             //await RefreshEventsList();
-            await _dataGrid.ReloadServerData();
+            await _dataGrid!.ReloadServerData();
             
             _isAddFormVisible = false;
             
@@ -360,7 +360,7 @@
 
     private void HandleCancelNewEvent()
     {
-        _isEditFormVisible = false;
+        _isAddFormVisible = false;
         _snackbar.Add("New event creation canceled", Severity.Info);
     }
     #endregion
@@ -375,7 +375,7 @@
             
             // Refresh the events list
             //await RefreshEventsList();
-            await _dataGrid.ReloadServerData();
+            await _dataGrid!.ReloadServerData();
             
             string action = _showArchivedEvents ? "un-archived" : "archived";
             _snackbar.Add($"Event {action} successfully", Severity.Success);
@@ -426,7 +426,7 @@
             
             // Refresh the events list
             //await RefreshEventsList();
-            await _dataGrid.ReloadServerData();
+            await _dataGrid!.ReloadServerData();
             
             _snackbar.Add("Event permanently deleted", Severity.Success);
         }
@@ -474,7 +474,7 @@
             _isLoading = true;
             _showArchivedEvents = archiveStatus;
             //await RefreshEventsList();
-            await _dataGrid.ReloadServerData();
+            await _dataGrid!.ReloadServerData();
             
             _snackbar.Add(_showArchivedEvents 
                 ? "Showing archived events" 
@@ -515,14 +515,14 @@
     private Task OnSearch(string s)
     {
         _searchString = s;
-        return _dataGrid.ReloadServerData();
+        return _dataGrid!.ReloadServerData();
     }
 
     private async Task<GridData<VwEvent>> ServerReload(GridState<VwEvent> state)
     {
         _eventsList = await _eventsService.GetAllEventsAsync(_showArchivedEvents);
-        if(!string.IsNullOrEmpty(_searchString) && _eventsList.Count() > 0)
-            _eventsList = _eventsList.Where(ev => (ev.DealName is not null && ev.DealName.Contains(_searchString, StringComparison.InvariantCultureIgnoreCase)) || (ev.Event is not null && ev.Event.Contains(_searchString, StringComparison.InvariantCultureIgnoreCase)) );
+        if(!string.IsNullOrEmpty(_searchString) && _eventsList!.Count() > 0)
+            _eventsList = _eventsList!.Where(ev => (ev.DealName is not null && ev.DealName.Contains(_searchString, StringComparison.InvariantCultureIgnoreCase)) || (ev.Event is not null && ev.Event.Contains(_searchString, StringComparison.InvariantCultureIgnoreCase)) );
         
         // _eventsList = _eventsList.Where(ev =>
         // {
@@ -535,14 +535,14 @@
         //     return false;
         // }).ToArray();
         
-        var totalItems = _eventsList.Count();
+        var totalItems = _eventsList!.Count();
         IEnumerable<VwEvent> pagedData = Enumerable.Empty<VwEvent>();
 
         var sortDefinition = state.SortDefinitions.FirstOrDefault();
 
         if (totalItems > 0)
         {
-            pagedData = _eventsList.Skip(state.Page * state.PageSize).Take(state.PageSize);
+            pagedData = _eventsList!.Skip(state.Page * state.PageSize).Take(state.PageSize);
         }
 
         //_dataGrid.Items = pagedData;

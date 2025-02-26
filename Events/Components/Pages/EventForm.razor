@@ -117,8 +117,8 @@
     public bool IsEditMode { get; set; }
 
     private MudForm? form;
-    private DateRange _dateRange;
-    private MudDateRangePicker _datePicker;
+    private DateRange? _dateRange;
+    private MudDateRangePicker? _datePicker;
 
     protected override void OnInitialized()
     {
@@ -132,8 +132,8 @@
         await form!.Validate();
         if (form.IsValid)
         {
-            Event.StartDate = _dateRange.Start;
-            Event.EndDate = _dateRange.End;
+            Event.StartDate = _dateRange?.Start;
+            Event.EndDate = _dateRange?.End;
             await OnSubmit.InvokeAsync(Event);
         }
     }
