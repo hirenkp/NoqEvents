@@ -5,7 +5,7 @@
 @inject IDialogService _dialogService
 @inject ISnackbar _snackbar
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-0">
+<MudContainer MaxWidth="MaxWidth.False" Class="pa-0">
     <MudPaper Class="pa-6" Elevation="4">
         <MudGrid Spacing="4">
             <!-- Page Header -->
@@ -14,25 +14,25 @@
             </MudItem>
 
             <!-- Action Buttons -->
-            <MudItem xs="12" Class="d-flex justify-space-between align-center flex-wrap gap-2">
-                <div>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" 
+            <MudItem xs="12" Class="d-flex flex-column flex-sm-row justify-space-between align-center gap-2">
+                <div class="d-flex flex-column flex-sm-row gap-2">
+                    <MudButton FullWidth="true" Variant="Variant.Filled" Color="Color.Primary"
                                OnClick="@ShowTerminalAvailabilityForm" StartIcon="@Icons.Material.Filled.DateRange">
                         Check Terminal Availability
                     </MudButton>
-                    <MudButton Class="ml-2" Variant="Variant.Filled" Color="Color.Secondary" 
+                    <MudButton FullWidth="true" Variant="Variant.Filled" Color="Color.Secondary"
                                OnClick="@ShowAddEventForm" StartIcon="@Icons.Material.Filled.Add">
                         Add New Event
                     </MudButton>
                 </div>
-                <MudCheckBox T="bool" bind-Value="@_showArchivedEvents" 
-                             ValueChanged="@FilterEventsByArchiveStatus" 
+                <MudCheckBox T="bool" bind-Value="@_showArchivedEvents"
+                             ValueChanged="@FilterEventsByArchiveStatus"
                              Label="Show Archived Events" Color="Color.Primary" />
             </MudItem>
 
             <!-- Data Grid -->
             <MudItem xs="12">
-                <MudDataGrid @ref="@_dataGrid" T="VwEvent" 
+                <MudDataGrid @ref="@_dataGrid" T="VwEvent"
                              Loading="@_isLoading" ReadOnly="true"
                              Bordered="true" Dense="true" Striped="true" Hover="true"
                              Filterable="true" Groupable="true"
@@ -45,10 +45,10 @@
                                       AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
                     </ToolBarContent>
                     <NoRecordsContent>
-                        <MudAlert Severity="Severity.Info" Class="my-2">@(_showArchivedEvents ? "No archived events found" : "No events found. Click \"Add New Event\" to create your first event.")</MudAlert>               
+                        <MudAlert Severity="Severity.Info" Class="my-2">@(_showArchivedEvents ? "No archived events found" : "No events found. Click \"Add New Event\" to create your first event.")</MudAlert>
                     </NoRecordsContent>
                     <LoadingContent>
-                        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-2" />    
+                        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-2" />
                     </LoadingContent>
                     <Columns>
                         <HierarchyColumn T="VwEvent" />
@@ -115,7 +115,7 @@
                         <div class="d-flex gap-2 align-center">
                             <MudTooltip Text="Reset Grid State">
                                 <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Restore"
-                                              OnClick="@ResetGrid"/>
+                                               OnClick="@ResetGrid"/>
                             </MudTooltip>
                             <MudText Typo="Typo.body2">
                                 Total: @(_eventsList?.Count() ?? 0) events
@@ -131,13 +131,13 @@
 </MudContainer>
 
 <MudOverlay @bind-Visible="_isTerminalAvailabilityFormVisible" DarkBackground="true" AutoClose="false">
-    <MudPaper Class="mx-auto pa-6" Style="max-width: 800px;" Elevation="4">
+    <MudPaper Class="mx-auto pa-6" Style="max-width: 1200px; width: 90%;" Elevation="4">
         <TerminalAvailabilityForm Entity="_availability" OnQuery="HandleQuery" OnCancel="HandleCancelQuery" />
     </MudPaper>
 </MudOverlay>
 
 <MudOverlay @bind-Visible="_isEditFormVisible" DarkBackground="true" AutoClose="false">
-    <MudPaper Class="mx-auto pa-6" Style="max-width: 800px;" Elevation="4">
+    <MudPaper Class="mx-auto pa-6" Style="max-width: 1200px; width: 90%;" Elevation="4">
         <EventForm
             Event="@_event"
             CountryList="@_countryList"
@@ -152,7 +152,7 @@
 
 <!-- Add Event Overlay -->
 <MudOverlay @bind-Visible="_isAddFormVisible" DarkBackground="true" AutoClose="false">
-    <MudPaper Class="mx-auto pa-6" Style="max-width: 800px;" Elevation="4">
+    <MudPaper Class="mx-auto pa-6" Style="max-width: 1200px; width: 90%;" Elevation="4">
         <EventForm
             Event="@_event"
             CountryList="@_countryList"
@@ -164,6 +164,10 @@
             OnCancel="HandleCancelNewEvent" />
     </MudPaper>
 </MudOverlay>
+
+@code {
+    // ... (rest of the code remains unchanged)
+}
 
 @code {
     #region Member variables

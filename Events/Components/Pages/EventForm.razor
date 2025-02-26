@@ -1,10 +1,10 @@
 ﻿<MudForm Model="@Event" @ref="form">
-    <MudGrid gutterSize="3">
+    <MudGrid Spacing="3" Justify="Justify.FlexStart">
         <!-- Text Fields -->
-        <MudItem xs="12">
+        <MudItem xs="12" sm="6">
             <MudTextField @bind-Value="Event.Reference" For="@(() => Event.Reference)" Label="Reference" />
         </MudItem>
-        <MudItem xs="12">
+        <MudItem xs="12" sm="6">
             <MudTextField @bind-Value="Event.DealName" For="@(() => Event.DealName)" Label="Deal Name" />
         </MudItem>
         <MudItem xs="12">
@@ -12,7 +12,7 @@
         </MudItem>
 
         <!-- Country/Region Select -->
-        <MudItem xs="12">
+        <MudItem xs="12" sm="6">
             <MudSelect T="short?" @bind-Value="Event.CountryId" Label="Country/Region" Placeholder="Please select a region">
                 @if (CountryList != null)
                 {
@@ -25,7 +25,7 @@
         </MudItem>
 
         <!-- Operator Type Select -->
-        <MudItem xs="12">
+        <MudItem xs="12" sm="6">
             <MudSelect T="short?" @bind-Value="Event.OperatorTypeId" Label="Type of Operator" Placeholder="Please select a type of operator">
                 @if (OperatorTypeList != null)
                 {
@@ -38,7 +38,7 @@
         </MudItem>
 
         <!-- Operator Name Select -->
-        <MudItem xs="12">
+        <MudItem xs="12" sm="6">
             <MudSelect T="short?" @bind-Value="Event.OperatorId" Label="Operator Name" Placeholder="Please select an operator">
                 @if (OperatorList != null)
                 {
@@ -51,7 +51,7 @@
         </MudItem>
 
         <!-- Deal Status Select -->
-        <MudItem xs="12">
+        <MudItem xs="12" sm="6">
             <MudSelect T="short?" @bind-Value="Event.DealStatusId" Label="Deal Status" Placeholder="Please select status of deal">
                 @if (DealStatusList != null)
                 {
@@ -72,13 +72,11 @@
             <MudDatePicker Editable="true" @bind-Date="Event.ExpectedReturnDate" Label="Expected Return Date" Placeholder="Select Date" Required="true" DateFormat="dd/MM/yyyy"/>
         </MudItem>
 
-        <!-- Numeric Field -->
-        <MudItem xs="12">
+        <!-- Numeric Fields -->
+        <MudItem xs="12" sm="6">
             <MudNumericField @bind-Value="Event.ExpectedTerminals" Label="Expected Terminals" Required="true"/>
         </MudItem>
-
-        <!-- Numeric Field -->
-        <MudItem xs="12">
+        <MudItem xs="12" sm="6">
             <MudNumericField @bind-Value="Event.ConfirmedTerminals" Label="Confirmed Terminals" Required="true"/>
         </MudItem>
         
@@ -149,5 +147,4 @@
         if(Event.ExpectedReturnDate is null || Event.ExpectedReturnDate < dateRange.End)
             Event.ExpectedReturnDate = dateRange.End?.AddDays(1);
     }
-
 }
