@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using System.Reflection
 @using MudBlazor.Extensions
 
 @inject EventsService _eventsService
@@ -137,7 +138,6 @@
 </MudOverlay>
 
 <MudOverlay @bind-Visible="_isEditFormVisible" DarkBackground="true" AutoClose="false">
-    <MudPaper Class="mx-auto pa-6" Style="max-width: 1200px; width: 90%;" Elevation="4">
         <EventForm
             Event="@_event"
             CountryList="@_countryList"
@@ -147,12 +147,10 @@
             IsEditMode="@_isEditMode"
             OnSubmit="HandleSaveEditChanges"
             OnCancel="HandleCancelEditChanges" />
-    </MudPaper>
 </MudOverlay>
 
 <!-- Add Event Overlay -->
 <MudOverlay @bind-Visible="_isAddFormVisible" DarkBackground="true" AutoClose="false">
-    <MudPaper Class="mx-auto pa-6" Style="max-width: 1200px; width: 90%;" Elevation="4">
         <EventForm
             Event="@_event"
             CountryList="@_countryList"
@@ -162,12 +160,7 @@
             IsEditMode="@_isEditMode"
             OnSubmit="HandleSaveNewEvent"
             OnCancel="HandleCancelNewEvent" />
-    </MudPaper>
 </MudOverlay>
-
-@code {
-    // ... (rest of the code remains unchanged)
-}
 
 @code {
     #region Member variables
@@ -504,7 +497,12 @@
         if (_dataGrid != null)
         {
             await _dataGrid.ClearFiltersAsync();
-            //await _dataGrid;
+
+            var properties = typeof(VwEvent).GetProperties();
+            foreach (var property in properties)
+            {
+                await _dataGrid.RemoveSortAsync(property.Name);
+            }
             
             _snackbar.Add("Grid filters have been reset", Severity.Info);
         }
@@ -539,11 +537,18 @@
         //     return false;
         // }).ToArray();
         
+        var sortDefinition = state.SortDefinitions.FirstOrDefault();
+        if(sortDefinition != null)
+        {
+            var properties = typeof(VwEvent).GetProperties();
+            _eventsList = _eventsList!.OrderByDirection(sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
+                e => e.GetType().GetProperty(sortDefinition.SortBy).GetValue(e));
+            
+        }
+        
         var totalItems = _eventsList!.Count();
         IEnumerable<VwEvent> pagedData = Enumerable.Empty<VwEvent>();
-
-        var sortDefinition = state.SortDefinitions.FirstOrDefault();
-
+        
         if (totalItems > 0)
         {
             pagedData = _eventsList!.Skip(state.Page * state.PageSize).Take(state.PageSize);

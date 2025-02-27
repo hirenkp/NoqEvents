@@ -1,92 +1,115 @@
-﻿<MudForm Model="@Event" @ref="form">
-    <MudGrid Spacing="3" Justify="Justify.FlexStart">
-        <!-- Text Fields -->
-        <MudItem xs="12" sm="6">
-            <MudTextField @bind-Value="Event.Reference" For="@(() => Event.Reference)" Label="Reference" />
-        </MudItem>
-        <MudItem xs="12" sm="6">
-            <MudTextField @bind-Value="Event.DealName" For="@(() => Event.DealName)" Label="Deal Name" />
-        </MudItem>
-        <MudItem xs="12">
-            <MudTextField @bind-Value="Event.Event1" For="@(() => Event.Event1)" Label="Event Name" Required="true"/>
-        </MudItem>
+﻿<MudPaper Class="mx-auto pa-6 mt-15 mt-sm-0" Style="max-width: 1200px; width: 90%; max-height: 90vh; overflow-y: auto;" Elevation="4">
+    <MudForm Model="@Event" @ref="_form">
+        <MudGrid Spacing="3" Justify="Justify.FlexStart">
+            <!-- Text Fields -->
+            <MudItem xs="12">
+                <MudTextField @bind-Value="Event.Reference" For="@(() => Event.Reference)" Label="Reference" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField @bind-Value="Event.DealName" For="@(() => Event.DealName)" Label="Deal Name" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField @bind-Value="Event.Event1" For="@(() => Event.Event1)" Label="Event Name" Required="true"/>
+            </MudItem>
 
-        <!-- Country/Region Select -->
-        <MudItem xs="12" sm="6">
-            <MudSelect T="short?" @bind-Value="Event.CountryId" Label="Country/Region" Placeholder="Please select a region">
-                @if (CountryList != null)
-                {
-                    foreach (var country in CountryList)
+            <!-- Country/Region Select -->
+            <MudItem xs="12">
+                <MudSelect T="short?" @bind-Value="Event.CountryId" Label="Country/Region" Placeholder="Please select a region">
+                    @if (CountryList != null)
                     {
-                        <MudSelectItem T="short?" Value="@country.Id">@country.Country1</MudSelectItem>
+                        foreach (var country in CountryList)
+                        {
+                            <MudSelectItem T="short?" Value="@country.Id">@country.Country1</MudSelectItem>
+                        }
                     }
-                }
-            </MudSelect>
-        </MudItem>
+                </MudSelect>
+            </MudItem>
 
-        <!-- Operator Type Select -->
-        <MudItem xs="12" sm="6">
-            <MudSelect T="short?" @bind-Value="Event.OperatorTypeId" Label="Type of Operator" Placeholder="Please select a type of operator">
-                @if (OperatorTypeList != null)
-                {
-                    foreach (var operatorType in OperatorTypeList)
+            <!-- Operator Type Select -->
+            <MudItem xs="12">
+                <MudSelect T="short?" @bind-Value="Event.OperatorTypeId" Label="Type of Operator" Placeholder="Please select a type of operator">
+                    @if (OperatorTypeList != null)
                     {
-                        <MudSelectItem T="short?" Value="@operatorType.Id">@operatorType.Type</MudSelectItem>
+                        foreach (var operatorType in OperatorTypeList)
+                        {
+                            <MudSelectItem T="short?" Value="@operatorType.Id">@operatorType.Type</MudSelectItem>
+                        }
                     }
-                }
-            </MudSelect>
-        </MudItem>
+                </MudSelect>
+            </MudItem>
 
-        <!-- Operator Name Select -->
-        <MudItem xs="12" sm="6">
-            <MudSelect T="short?" @bind-Value="Event.OperatorId" Label="Operator Name" Placeholder="Please select an operator">
-                @if (OperatorList != null)
-                {
-                    foreach (var operatorName in OperatorList)
+            <!-- Operator Name Select -->
+            <MudItem xs="12">
+                <MudSelect T="short?" @bind-Value="Event.OperatorId" Label="Operator Name" Placeholder="Please select an operator">
+                    @if (OperatorList != null)
                     {
-                        <MudSelectItem T="short?" Value="@operatorName.Id">@operatorName.Name</MudSelectItem>
+                        foreach (var operatorName in OperatorList)
+                        {
+                            <MudSelectItem T="short?" Value="@operatorName.Id">@operatorName.Name</MudSelectItem>
+                        }
                     }
-                }
-            </MudSelect>
-        </MudItem>
+                </MudSelect>
+            </MudItem>
 
-        <!-- Deal Status Select -->
-        <MudItem xs="12" sm="6">
-            <MudSelect T="short?" @bind-Value="Event.DealStatusId" Label="Deal Status" Placeholder="Please select status of deal">
-                @if (DealStatusList != null)
-                {
-                    foreach (var dealStatus in DealStatusList)
+            <!-- Deal Status Select -->
+            <MudItem xs="12">
+                <MudSelect T="short?" @bind-Value="Event.DealStatusId" Label="Deal Status" Placeholder="Please select status of deal">
+                    @if (DealStatusList != null)
                     {
-                        <MudSelectItem T="short?" Value="@dealStatus.Id">@dealStatus.Status</MudSelectItem>
+                        foreach (var dealStatus in DealStatusList)
+                        {
+                            <MudSelectItem T="short?" Value="@dealStatus.Id">@dealStatus.Status</MudSelectItem>
+                        }
                     }
-                }
-            </MudSelect>
-        </MudItem>
+                </MudSelect>
+            </MudItem>
 
-        <!-- Date Pickers -->
-        <MudItem xs="12" sm="8">
-            <MudDateRangePicker @ref="@_datePicker" DateRange="@_dateRange" Margin="Margin.Dense" ReadOnly="false" Clearable="true"
-                                PlaceholderStart="Start Date" PlaceholderEnd="End Date" Label="Range" DateRangeChanged="@OnDateRangeChanged"/>
-        </MudItem>
-        <MudItem xs="12" sm="4">
-            <MudDatePicker Editable="true" @bind-Date="Event.ExpectedReturnDate" Label="Expected Return Date" Placeholder="Select Date" Required="true" DateFormat="dd/MM/yyyy"/>
-        </MudItem>
+            <!-- Date Pickers -->
+            <!-- Desktop: DateRangePicker -->
+            <MudItem xs="12" Class="d-none d-sm-block">
+                <MudDateRangePicker @ref="@_datePicker" DateRange="@_dateRange" Margin="Margin.Dense" ReadOnly="false" Clearable="true"
+                                    PlaceholderStart="Start Date" PlaceholderEnd="End Date" Label="Range" DateRangeChanged="@OnDateRangeChanged"/>
+            </MudItem>
 
-        <!-- Numeric Fields -->
-        <MudItem xs="12" sm="6">
-            <MudNumericField @bind-Value="Event.ExpectedTerminals" Label="Expected Terminals" Required="true"/>
-        </MudItem>
-        <MudItem xs="12" sm="6">
-            <MudNumericField @bind-Value="Event.ConfirmedTerminals" Label="Confirmed Terminals" Required="true"/>
-        </MudItem>
-        
-        <!-- Action Buttons -->
-        <MudItem xs="12" Class="d-flex justify-end mt-4">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit">@(IsEditMode ? "Update" : "Save")</MudButton>
-            <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="CancelChanges" Class="ml-2">Cancel</MudButton>
-        </MudItem>
-    </MudGrid>
-</MudForm>
+            <!-- Mobile: Separate Date Pickers -->
+            <MudItem xs="12" Class="d-block d-sm-none">
+                <MudDatePicker @bind-Date="Event.StartDate" Label="Start Date" Placeholder="Select Start Date" Required="true" DateFormat="dd/MM/yyyy"
+                               PopoverClass="mobile-datepicker-popover"/>
+                <MudDatePicker @bind-Date="Event.EndDate" Label="End Date" Placeholder="Select End Date" Required="true" DateFormat="dd/MM/yyyy" Class="mt-3"
+                               PopoverClass="mobile-datepicker-popover"/>
+            </MudItem>
+
+            <!-- Expected Return Date -->
+            <MudItem xs="12">
+                <MudDatePicker @bind-Date="Event.ExpectedReturnDate" Label="Expected Return Date" Placeholder="Select Date" Required="true" DateFormat="dd/MM/yyyy"
+                               PopoverClass="mobile-datepicker-popover"/>
+            </MudItem>
+
+            <!-- Numeric Fields -->
+            <MudItem xs="12">
+                <MudNumericField @bind-Value="Event.ExpectedTerminals" Label="Expected Terminals" Required="true"/>
+            </MudItem>
+            <MudItem xs="12">
+                <MudNumericField @bind-Value="Event.ConfirmedTerminals" Label="Confirmed Terminals" Required="true"/>
+            </MudItem>
+
+            <!-- Action Buttons -->
+            <MudItem xs="12" Class="d-flex justify-end mt-4">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit">@(IsEditMode ? "Update" : "Save")</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="CancelChanges" Class="ml-2">Cancel</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudForm>
+</MudPaper>
+
+<style>
+    /* Custom CSS for mobile date picker dropdown */
+    .mobile-datepicker-popover {
+        max-height: 300px; /* Adjust as needed */
+        overflow-y: auto;
+        z-index: 1000; /* Ensure the dropdown appears above other elements */
+    }
+</style>
 
 @code {
     // The event entity passed from the parent.
@@ -114,7 +137,7 @@
     [Parameter]
     public bool IsEditMode { get; set; }
 
-    private MudForm? form;
+    private MudForm? _form;
     private DateRange? _dateRange;
     private MudDateRangePicker? _datePicker;
 
@@ -127,8 +150,8 @@
 
     private async Task Submit()
     {
-        await form!.Validate();
-        if (form.IsValid)
+        await _form!.Validate();
+        if (_form.IsValid)
         {
             Event.StartDate = _dateRange?.Start;
             Event.EndDate = _dateRange?.End;
@@ -144,7 +167,7 @@
     private void OnDateRangeChanged(DateRange dateRange)
     {
         _dateRange = dateRange;
-        if(Event.ExpectedReturnDate is null || Event.ExpectedReturnDate < dateRange.End)
-            Event.ExpectedReturnDate = dateRange.End?.AddDays(1);
+        if(Event.ExpectedReturnDate is null || Event.ExpectedReturnDate < dateRange!.End)
+            Event.ExpectedReturnDate = dateRange!.End?.AddDays(1);
     }
 }
