@@ -1,115 +1,191 @@
-﻿<MudPaper Class="mx-auto pa-6 mt-15 mt-sm-0" Style="max-width: 1200px; width: 90%; max-height: 90vh; overflow-y: auto;" Elevation="4">
+﻿@using System.Threading
+@inject IDialogService DialogService
+@inject EventsService EventsService
+
+<MudPaper Class="mx-auto pa-6 mt-15 mt-sm-0" Style="max-width:1200px; width:90%; max-height:90vh; overflow-y:auto;" Elevation="4">
     <MudForm Model="@Event" @ref="_form">
         <MudGrid Spacing="3" Justify="Justify.FlexStart">
-            <!-- Text Fields -->
-            <MudItem xs="12">
-                <MudTextField @bind-Value="Event.Reference" For="@(() => Event.Reference)" Label="Reference" />
-            </MudItem>
-            <MudItem xs="12">
-                <MudTextField @bind-Value="Event.DealName" For="@(() => Event.DealName)" Label="Deal Name" />
-            </MudItem>
-            <MudItem xs="12">
-                <MudTextField @bind-Value="Event.Event1" For="@(() => Event.Event1)" Label="Event Name" Required="true"/>
-            </MudItem>
+            @if (_isLoading)
+            {
+                <MudItem xs="12" Class="d-flex justify-center align-center" Style="min-height:200px;">
+                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+                </MudItem>
+            }
+            else
+            {
+                <!-- Text Fields -->
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="Event.Reference" For="@(() => Event.Reference)" Label="Reference" Dense="true" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="Event.Deal_Name" For="@(() => Event.Deal_Name)" Label="Deal Name" Dense="true" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="Event.Event" For="@(() => Event.Event)" Label="Event Name" Required="true" Dense="true" />
+                </MudItem>
 
-            <!-- Country/Region Select -->
-            <MudItem xs="12">
-                <MudSelect T="short?" @bind-Value="Event.CountryId" Label="Country/Region" Placeholder="Please select a region">
-                    @if (CountryList != null)
-                    {
-                        foreach (var country in CountryList)
-                        {
-                            <MudSelectItem T="short?" Value="@country.Id">@country.Country1</MudSelectItem>
-                        }
-                    }
-                </MudSelect>
-            </MudItem>
+                <!-- Country/Region Select -->
+                <MudItem xs="11">
+                    <MudAutocomplete T="Country"
+                                     Label="Select or Add Country"
+                                     SearchFunc="SearchCountries"
+                                     @bind-Value="_selectedCountry"
+                                     ResetValueOnEmptyText="false"
+                                     ToStringFunc="@(c => c?.Country1)"
+                                     MaxItems="10"
+                                     Clearable="true"
+                                     Dense="true">
+                    </MudAutocomplete>
+                </MudItem>
+                <MudItem xs="1">
+                    <MudTooltip Text="Add Country">
+                        <MudIconButton Size="Size.Small"
+                                       Icon="@Icons.Material.Filled.Add"
+                                       Color="Color.Primary"
+                                       OnClick="@(() => AddItem("Country"))" />
+                    </MudTooltip>
+                </MudItem>
 
-            <!-- Operator Type Select -->
-            <MudItem xs="12">
-                <MudSelect T="short?" @bind-Value="Event.OperatorTypeId" Label="Type of Operator" Placeholder="Please select a type of operator">
-                    @if (OperatorTypeList != null)
-                    {
-                        foreach (var operatorType in OperatorTypeList)
-                        {
-                            <MudSelectItem T="short?" Value="@operatorType.Id">@operatorType.Type</MudSelectItem>
-                        }
-                    }
-                </MudSelect>
-            </MudItem>
+                <!-- Operator Type Select -->
+                <MudItem xs="11">
+                    <MudAutocomplete T="OperatorType"
+                                     Label="Select or Add Operator Type"
+                                     SearchFunc="SearchOperatorType"
+                                     @bind-Value="_selectedOperatorType"
+                                     ResetValueOnEmptyText="false"
+                                     ToStringFunc="@(o => o?.Type)"
+                                     MaxItems="10"
+                                     Clearable="true"
+                                     Dense="true">
+                    </MudAutocomplete>
+                </MudItem>
+                <MudItem xs="1">
+                    <MudTooltip Text="Add Operator Type">
+                        <MudIconButton Size="Size.Small"
+                                       Icon="@Icons.Material.Filled.Add"
+                                       Color="Color.Primary"
+                                       OnClick="@(() => AddItem("OperatorType"))" />
+                    </MudTooltip>
+                </MudItem>
+                
+                <!-- Operator Name Select -->
+                <MudItem xs="11">
+                    <MudAutocomplete T="Operator"
+                                     Label="Select or Add Operator"
+                                     SearchFunc="SearchOperator"
+                                     @bind-Value="_selectedOperator"
+                                     ResetValueOnEmptyText="false"
+                                     ToStringFunc="@(o => o?.Name)"
+                                     MaxItems="10"
+                                     Clearable="true"
+                                     Dense="true">
+                    </MudAutocomplete>
+                </MudItem>
+                <MudItem xs="1">
+                    <MudTooltip Text="Add Operator">
+                        <MudIconButton Size="Size.Small"
+                                       Icon="@Icons.Material.Filled.Add"
+                                       Color="Color.Primary"
+                                       OnClick="@(() => AddItem("Operator"))" />
+                    </MudTooltip>
+                </MudItem>
+                
+                <!-- Deal Status Select -->
+                <MudItem xs="11">
+                    <MudAutocomplete T="DealStatus"
+                                     Label="Select or Add Deal Status"
+                                     SearchFunc="SearchDealStatus"
+                                     @bind-Value="_selectedDealStatus"
+                                     ResetValueOnEmptyText="false"
+                                     ToStringFunc="@(ds => ds?.Status)"
+                                     MaxItems="10"
+                                     Clearable="true"
+                                     Dense="true">
+                    </MudAutocomplete>
+                </MudItem>
+                <MudItem xs="1">
+                    <MudTooltip Text="Add Deal Status">
+                        <MudIconButton Size="Size.Small"
+                                       Icon="@Icons.Material.Filled.Add"
+                                       Color="Color.Primary"
+                                       OnClick="@(() => AddItem("DealStatus"))" />
+                    </MudTooltip>
+                </MudItem>
 
-            <!-- Operator Name Select -->
-            <MudItem xs="12">
-                <MudSelect T="short?" @bind-Value="Event.OperatorId" Label="Operator Name" Placeholder="Please select an operator">
-                    @if (OperatorList != null)
-                    {
-                        foreach (var operatorName in OperatorList)
-                        {
-                            <MudSelectItem T="short?" Value="@operatorName.Id">@operatorName.Name</MudSelectItem>
-                        }
-                    }
-                </MudSelect>
-            </MudItem>
+                <!-- Date Pickers -->
+                <MudItem xs="12">
+                    <MudHidden Breakpoint="Breakpoint.SmAndUp">
+                        <!-- Mobile: Separate Date Pickers -->
+                        <MudDatePicker @bind-Date="Event.Hardware_Out_Date" Placeholder="Select HW Out Date" Editable="true" Required="true" DateFormat="dd/MM/yyyy" Dense="true" />
+                        <MudDatePicker @bind-Date="Event.Hardware_In_Date" Placeholder="Select HW In Date" Editable="true" Required="true" DateFormat="dd/MM/yyyy" Class="mt-3" Dense="true" />
+                        <MudDatePicker @bind-Date="Event.StartDate" Label="Start Date" Placeholder="Select Start Date" Editable="true" Required="true" DateFormat="dd/MM/yyyy" Dense="true" />
+                        <MudDatePicker @bind-Date="Event.EndDate" Label="End Date" Placeholder="Select End Date" Editable="true" Required="true" DateFormat="dd/MM/yyyy" Class="mt-3" Dense="true" />
+                    </MudHidden>
+                    <MudHidden Breakpoint="Breakpoint.Xs">
+                        <!-- Desktop: Date Range Pickers -->
+                        <MudDateRangePicker @ref="_hardwareOutInDateRangePicker"
+                                            @bind-DateRange="_dateHardwareDateRange"
+                                            Margin="Margin.Dense"
+                                            ReadOnly="false"
+                                            Clearable="true"
+                                            Editable="true"
+                                            Required="true"
+                                            PlaceholderStart="HW Out Date"
+                                            PlaceholderEnd="HW In Date"
+                                            DateFormat="dd/MM/yyyy"
+                                            Label="Hardware Lease Dates"
+                                            Dense="true" />
+                        <MudDateRangePicker @ref="_eventDateRangePicker"
+                                            DateRange="_dateEventRange"
+                                            Margin="Margin.Dense"
+                                            ReadOnly="false"
+                                            Clearable="true"
+                                            Editable="true"
+                                            Required="true"
+                                            PlaceholderStart="Start Date"
+                                            PlaceholderEnd="End Date"
+                                            DateFormat="dd/MM/yyyy"
+                                            Label="Event Dates"
+                                            DateRangeChanged="@OnDateRangeChanged"
+                                            Dense="true" />
+                    </MudHidden>
+                </MudItem>
 
-            <!-- Deal Status Select -->
-            <MudItem xs="12">
-                <MudSelect T="short?" @bind-Value="Event.DealStatusId" Label="Deal Status" Placeholder="Please select status of deal">
-                    @if (DealStatusList != null)
-                    {
-                        foreach (var dealStatus in DealStatusList)
-                        {
-                            <MudSelectItem T="short?" Value="@dealStatus.Id">@dealStatus.Status</MudSelectItem>
-                        }
-                    }
-                </MudSelect>
-            </MudItem>
+                <!-- Expected Return Date -->
+                <MudItem xs="12">
+                    <MudDatePicker @bind-Date="Event.ExpectedReturnDate" Label="Expected Return Date" Placeholder="Select Date" Editable="true" Required="true" DateFormat="dd/MM/yyyy" Dense="true" />
+                </MudItem>
 
-            <!-- Date Pickers -->
-            <!-- Desktop: DateRangePicker -->
-            <MudItem xs="12" Class="d-none d-sm-block">
-                <MudDateRangePicker @ref="@_datePicker" DateRange="@_dateRange" Margin="Margin.Dense" ReadOnly="false" Clearable="true"
-                                    PlaceholderStart="Start Date" PlaceholderEnd="End Date" Label="Range" DateRangeChanged="@OnDateRangeChanged"/>
-            </MudItem>
+                <!-- Numeric Fields -->
+                <MudItem xs="12">
+                    <MudNumericField @bind-Value="Event.ExpectedTerminals" Label="Expected Terminals" Required="true" Dense="true" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudNumericField @bind-Value="Event.ConfirmedTerminals" Label="Confirmed Terminals" Required="true" Dense="true" />
+                </MudItem>
 
-            <!-- Mobile: Separate Date Pickers -->
-            <MudItem xs="12" Class="d-block d-sm-none">
-                <MudDatePicker @bind-Date="Event.StartDate" Label="Start Date" Placeholder="Select Start Date" Required="true" DateFormat="dd/MM/yyyy"
-                               PopoverClass="mobile-datepicker-popover"/>
-                <MudDatePicker @bind-Date="Event.EndDate" Label="End Date" Placeholder="Select End Date" Required="true" DateFormat="dd/MM/yyyy" Class="mt-3"
-                               PopoverClass="mobile-datepicker-popover"/>
-            </MudItem>
-
-            <!-- Expected Return Date -->
-            <MudItem xs="12">
-                <MudDatePicker @bind-Date="Event.ExpectedReturnDate" Label="Expected Return Date" Placeholder="Select Date" Required="true" DateFormat="dd/MM/yyyy"
-                               PopoverClass="mobile-datepicker-popover"/>
-            </MudItem>
-
-            <!-- Numeric Fields -->
-            <MudItem xs="12">
-                <MudNumericField @bind-Value="Event.ExpectedTerminals" Label="Expected Terminals" Required="true"/>
-            </MudItem>
-            <MudItem xs="12">
-                <MudNumericField @bind-Value="Event.ConfirmedTerminals" Label="Confirmed Terminals" Required="true"/>
-            </MudItem>
-
-            <!-- Action Buttons -->
-            <MudItem xs="12" Class="d-flex justify-end mt-4">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit">@(IsEditMode ? "Update" : "Save")</MudButton>
-                <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="CancelChanges" Class="ml-2">Cancel</MudButton>
-            </MudItem>
+                <!-- Action Buttons -->
+                <MudItem xs="12" Class="d-flex justify-end mt-4">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" Class="w-100 w-sm-auto">
+                        @(IsEditMode ? "Update" : "Save")
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="CancelChanges" Class="ml-2 w-100 w-sm-auto mt-2 mt-sm-0">
+                        Cancel
+                    </MudButton>
+                </MudItem>
+            }
         </MudGrid>
     </MudForm>
+    @* @if (_showValidationErrors) *@
+    @* { *@
+    @*     <MudAlert Severity="Severity.Error" Class="mt-4"> *@
+    @*         @foreach (var error in _form.Errors) *@
+    @*         { *@
+    @*             <p>@error</p> *@
+    @*         } *@
+    @*     </MudAlert> *@
+    @* } *@
 </MudPaper>
-
-<style>
-    /* Custom CSS for mobile date picker dropdown */
-    .mobile-datepicker-popover {
-        max-height: 300px; /* Adjust as needed */
-        overflow-y: auto;
-        z-index: 1000; /* Ensure the dropdown appears above other elements */
-    }
-</style>
 
 @code {
     // The event entity passed from the parent.
@@ -117,13 +193,9 @@
     public NoqEvent Event { get; set; } = new NoqEvent();
 
     // Lookup lists for dropdowns.
-    [Parameter]
     public IEnumerable<Country>? CountryList { get; set; }
-    [Parameter]
     public IEnumerable<OperatorType>? OperatorTypeList { get; set; }
-    [Parameter]
     public IEnumerable<Operator>? OperatorList { get; set; }
-    [Parameter]
     public IEnumerable<DealStatus>? DealStatusList { get; set; }
 
     // Callback when save is clicked and the form is valid.
@@ -138,14 +210,45 @@
     public bool IsEditMode { get; set; }
 
     private MudForm? _form;
-    private DateRange? _dateRange;
-    private MudDateRangePicker? _datePicker;
+    private DateRange? _dateEventRange;
+    private MudDateRangePicker? _eventDateRangePicker;
+    private MudDateRangePicker? _hardwareOutInDateRangePicker;
 
-    protected override void OnInitialized()
+    private bool _isLoading = true;
+
+    private Country? _selectedCountry;
+    private OperatorType? _selectedOperatorType;
+    private Operator? _selectedOperator;
+    private DealStatus? _selectedDealStatus;
+    private DateRange? _dateHardwareDateRange;
+    private bool _showValidationErrors = false;
+
+    protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
+        _isLoading = true;
+        await base.OnInitializedAsync();
 
-        _dateRange = new DateRange(Event.StartDate, Event.EndDate);
+        // Load lookup data concurrently for performance
+        var countriesTask = EventsService.GetAllCountriesAsync();
+        var dealStatusesTask = EventsService.GetAllDealStatusesAsync();
+        var operatorsTask = EventsService.GetAllOpearatorsAsync();
+        var operatorTypesTask = EventsService.GetAllOpearatorTypesAsync();
+
+        await Task.WhenAll(countriesTask, dealStatusesTask, operatorsTask, operatorTypesTask);
+
+        CountryList = await countriesTask;
+        DealStatusList = await dealStatusesTask;
+        OperatorList = await operatorsTask;
+        OperatorTypeList = await operatorTypesTask;
+
+        _selectedCountry = CountryList?.FirstOrDefault(c => c.Id == Event.CountryId);
+        _selectedOperatorType = OperatorTypeList?.FirstOrDefault(ot => ot.Id == Event.OperatorTypeId);
+        _selectedOperator = OperatorList?.FirstOrDefault(o => o.Id == Event.OperatorId);
+        _selectedDealStatus = DealStatusList?.FirstOrDefault(ds => ds.Id == Event.DealStatusId);
+
+        _dateEventRange = new DateRange(Event.StartDate, Event.EndDate);
+
+        _isLoading = false;
     }
 
     private async Task Submit()
@@ -153,9 +256,20 @@
         await _form!.Validate();
         if (_form.IsValid)
         {
-            Event.StartDate = _dateRange?.Start;
-            Event.EndDate = _dateRange?.End;
+            _showValidationErrors = false;
+            Event.CountryId = _selectedCountry!.Id;
+            Event.OperatorId = _selectedOperator!.Id;
+            Event.DealStatusId = _selectedDealStatus!.Id;
+            Event.OperatorTypeId = _selectedOperatorType!.Id;
+            Event.StartDate = _dateEventRange?.Start;
+            Event.EndDate = _dateEventRange?.End;
+            Event.Hardware_Out_Date = _dateHardwareDateRange?.Start;
+            Event.Hardware_In_Date = _dateHardwareDateRange?.End;
             await OnSubmit.InvokeAsync(Event);
+        }
+        else
+        {
+            _showValidationErrors = true;
         }
     }
 
@@ -163,11 +277,113 @@
     {
         await OnCancel.InvokeAsync();
     }
-    
-    private void OnDateRangeChanged(DateRange dateRange)
+
+    private void OnDateRangeChanged(DateRange? dateRange)
     {
-        _dateRange = dateRange;
-        if(Event.ExpectedReturnDate is null || Event.ExpectedReturnDate < dateRange!.End)
+        _dateEventRange = dateRange;
+        if (Event.ExpectedReturnDate is null || Event.ExpectedReturnDate < dateRange!.End)
             Event.ExpectedReturnDate = dateRange!.End?.AddDays(1);
+    }
+
+    private void OnHardwareDateRangeChanged(DateRange? dateRange)
+    {
+        _dateHardwareDateRange = dateRange;
+    }
+
+    private async Task<IEnumerable<Country>> SearchCountries(string? value, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return CountryList?.Take(10) ?? Enumerable.Empty<Country>();
+
+        await Task.Delay(300, token); // debounce
+        return CountryList?.Where(c => c.Country1.StartsWith(value, StringComparison.InvariantCultureIgnoreCase)).Take(10)
+            ?? Enumerable.Empty<Country>();
+    }
+
+    private async Task<IEnumerable<OperatorType>> SearchOperatorType(string? value, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return OperatorTypeList?.Take(10) ?? Enumerable.Empty<OperatorType>();
+
+        await Task.Delay(300, token);
+        return OperatorTypeList?.Where(ot => ot.Type.StartsWith(value, StringComparison.InvariantCultureIgnoreCase)).Take(10)
+            ?? Enumerable.Empty<OperatorType>();
+    }
+
+    private async Task<IEnumerable<Operator>> SearchOperator(string? value, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return OperatorList?.Take(10) ?? Enumerable.Empty<Operator>();
+
+        await Task.Delay(300, token);
+        return OperatorList?.Where(o => o.Name.StartsWith(value, StringComparison.InvariantCultureIgnoreCase)).Take(10)
+            ?? Enumerable.Empty<Operator>();
+    }
+
+    private async Task<IEnumerable<DealStatus>> SearchDealStatus(string? value, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return DealStatusList?.Take(10) ?? Enumerable.Empty<DealStatus>();
+
+        await Task.Delay(300, token);
+        return DealStatusList?.Where(ds => ds.Status.StartsWith(value, StringComparison.InvariantCultureIgnoreCase)).Take(10)
+            ?? Enumerable.Empty<DealStatus>();
+    }
+
+    private async Task AddItem(string eventAttributeName)
+    {
+        object? newItemType = eventAttributeName switch
+        {
+            "Country"     => new Country(),
+            "DealStatus"  => new DealStatus(),
+            "OperatorType"=> new OperatorType(),
+            "Operator"    => new Operator(),
+            _             => null
+        };
+
+        if (newItemType == null)
+            return;
+
+        var parameters = new DialogParameters<AddItemDialog>() { ["ObjectToEdit"] = newItemType };
+
+        var dialog = await DialogService.ShowAsync<AddItemDialog>("Add New Item", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data != null)
+        {
+            switch (eventAttributeName)
+            {
+                case "Country":
+                    _selectedCountry = (Country?)result.Data;
+                    CountryList = CountryList!.Concat(new[] { _selectedCountry }).ToList();
+                    await EventsService.AddCountryAsync(_selectedCountry);
+                    break;
+                case "DealStatus":
+                    _selectedDealStatus = (DealStatus?)result.Data;
+                    DealStatusList = DealStatusList!.Concat(new[] { _selectedDealStatus }).ToList();
+                    await EventsService.AddDealStatusAsync(_selectedDealStatus);
+                    break;
+                case "OperatorType":
+                    _selectedOperatorType = (OperatorType?)result.Data;
+                    OperatorTypeList = OperatorTypeList!.Concat(new[] { _selectedOperatorType }).ToList();
+                    await EventsService.AddOperatorTypeAsync(_selectedOperatorType);
+                    break;
+                case "Operator":
+                    _selectedOperator = (Operator?)result.Data;
+                    OperatorList = OperatorList!.Concat(new[] { _selectedOperator }).ToList();
+                    await EventsService.AddOperatorAsync(_selectedOperator);
+                    break;
+            }
+        }
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        base.OnAfterRender(firstRender);
+        if (firstRender)
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
     }
 }

@@ -1,48 +1,75 @@
 ﻿<MudForm @ref="form">
     <MudGrid gutterSize="3">
-        <MudItem xs="12" sm="12" md="12">
-            <MudDateRangePicker @bind-DateRange="@_dateRange" Margin="Margin.Dense" ReadOnly="false" Clearable="true"
-                                PlaceholderStart="Start Date" PlaceholderEnd="End Date" Label="Range"/>
-        </MudItem>
-         <MudItem xs="12" sm="4" md="2">
-            <MudNumericField @bind-Value="Entity!.TotalTerminals"
-                             Label="Total Available Terminal" />
+        <!-- Date Range Picker (full width on mobile) -->
+        <MudItem xs="12">
+            <MudDateRangePicker @bind-DateRange="_dateRange" 
+                                Margin="Margin.Dense" 
+                                ReadOnly="false" 
+                                Clearable="true"
+                                PlaceholderStart="Start Date" 
+                                PlaceholderEnd="End Date" 
+                                Label="Range" />
         </MudItem>
 
+        <!-- Numeric Field for Total Terminals -->
+        <MudItem xs="12" sm="6" md="4">
+            <MudNumericField @bind-Value="Entity!.TotalTerminals"
+                             Label="Total Available Terminal" 
+                             Margin="Margin.Dense" />
+        </MudItem>
+
+        <!-- Data Grid, wrapped in a scrollable container for mobile -->
         @if (showGrid)
         {
             <MudItem xs="12">
-                <MudDataGrid T="DailyTerminalAvailability" Items="Entity!.DailyTerminalAvailability"
-                             ReadOnly="true" Bordered="true" Dense="true" Striped="true" Hover="true">
-                    <Columns>
-                        <PropertyColumn Property="x => x.Date" Title="Date" />
-                        <PropertyColumn Property="x => x.TotalAssigned" Title="Total Assigned" />
-                        <PropertyColumn Property="x => x.TotalAvailable" Title="Total Available" />
-                    </Columns>
-                    <PagerContent>
-                        <MudDataGridPager T="DailyTerminalAvailability" />
-                    </PagerContent>
-                </MudDataGrid>
+                <MudPaper Class="pa-2" Style="overflow-x:auto;">
+                    <MudDataGrid T="DailyTerminalAvailability" 
+                                 Items="Entity!.DailyTerminalAvailability"
+                                 ReadOnly="true" 
+                                 Bordered="true" 
+                                 Dense="true" 
+                                 Striped="true" 
+                                 Hover="true">
+                        <Columns>
+                            <PropertyColumn Property="x => x.Date" Title="Date" />
+                            <PropertyColumn Property="x => x.TotalExpectedAssigned" Title="Total Expected Assigned" />
+                            <PropertyColumn Property="x => x.TotalExpectedAvailable" Title="Total Expected Available" />
+                            <PropertyColumn Property="x => x.TotalConfirmedAssigned" Title="Total Confirmed Assigned" />
+                            <PropertyColumn Property="x => x.TotalConfirmedAvailable" Title="Total Confirmed Available" />
+                        </Columns>
+                        <PagerContent>
+                            <MudDataGridPager T="DailyTerminalAvailability" />
+                        </PagerContent>
+                    </MudDataGrid>
+                </MudPaper>
             </MudItem>
         }
 
-        <MudItem xs="12" Class="d-flex justify-end mt-4">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Query">Query</MudButton>
-            <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="Cancel" Class="ml-2">Cancel</MudButton>
+        <!-- Action Buttons: vertical stack on mobile, horizontal on larger screens -->
+        <MudItem xs="12" Class="d-flex flex-column flex-sm-row justify-end mt-4 gap-2">
+            <MudButton Variant="Variant.Filled" 
+                       Color="Color.Primary" 
+                       OnClick="Query" 
+                       FullWidth="true">
+                Query
+            </MudButton>
+            <MudButton Variant="Variant.Filled" 
+                       Color="Color.Secondary" 
+                       OnClick="Cancel" 
+                       FullWidth="true">
+                Cancel
+            </MudButton>
         </MudItem>
     </MudGrid>
 </MudForm>
 
 @code {
-    // The entity parameter that contains all the form data.
     [Parameter]
     public TerminalAvailabilityParameters? Entity { get; set; }
 
-    // Callback when the Query button is clicked and the form is valid.
     [Parameter]
     public EventCallback<TerminalAvailabilityParameters> OnQuery { get; set; }
 
-    // Callback when the Cancel button is clicked.
     [Parameter]
     public EventCallback OnCancel { get; set; }
 
@@ -55,7 +82,6 @@
         await form!.Validate();
         if (form.IsValid)
         {
-            // Show the data grid only after a successful query.
             showGrid = true;
             Entity!.StartDate = _dateRange.Start;
             Entity.EndDate = _dateRange.End;
@@ -65,7 +91,6 @@
 
     private async Task Cancel()
     {
-        // Hide the data grid and invoke the cancel callback.
         showGrid = false;
         await OnCancel.InvokeAsync();
     }

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 using Events.Services;
 using MudBlazor;
+using Microsoft.Extensions.Configuration; // Add this using statement
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHttpClient();
@@ -13,10 +14,17 @@ builder.Services.AddMudServices();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-var cs = builder.Configuration.GetConnectionString("Default");
+// Retrieve the connection string from appsettings.json as a fallback
+var defaultConnectionString = builder.Configuration.GetConnectionString("Default");
+
+// Check for the environment variable and override if present
+var environmentConnectionString = Environment.GetEnvironmentVariable("DATABASE_CONNECTION_STRING");
+
+var connectionString = string.IsNullOrEmpty(environmentConnectionString) ? defaultConnectionString : environmentConnectionString;
+
 builder.Services.AddDbContextFactory<EventsDbContext>(options =>
 {
-    options.UseSqlServer(cs);
+    options.UseSqlServer(connectionString);
 });
 
 builder.Services.AddMudServices(config => {
@@ -36,7 +44,6 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 
 app.UseAntiforgery();
 

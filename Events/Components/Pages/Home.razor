@@ -1,10 +1,11 @@
 ﻿@page "/"
-@using System.Reflection
-@using MudBlazor.Extensions
 
-@inject EventsService _eventsService
-@inject IDialogService _dialogService
-@inject ISnackbar _snackbar
+@using System.Threading.Tasks
+@using System.Linq
+@using MudBlazor
+@inject EventsService EventsService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
 
 <MudContainer MaxWidth="MaxWidth.False" Class="pa-0">
     <MudPaper Class="pa-6" Elevation="4">
@@ -18,72 +19,71 @@
             <MudItem xs="12" Class="d-flex flex-column flex-sm-row justify-space-between align-center gap-2">
                 <div class="d-flex flex-column flex-sm-row gap-2">
                     <MudButton FullWidth="true" Variant="Variant.Filled" Color="Color.Primary"
-                               OnClick="@ShowTerminalAvailabilityForm" StartIcon="@Icons.Material.Filled.DateRange">
+                               OnClick="ShowTerminalAvailabilityForm" StartIcon="@Icons.Material.Filled.DateRange">
                         Check Terminal Availability
                     </MudButton>
                     <MudButton FullWidth="true" Variant="Variant.Filled" Color="Color.Secondary"
-                               OnClick="@ShowAddEventForm" StartIcon="@Icons.Material.Filled.Add">
+                               OnClick="ShowAddEventForm" StartIcon="@Icons.Material.Filled.Add">
                         Add New Event
                     </MudButton>
                 </div>
-                <MudCheckBox T="bool" bind-Value="@_showArchivedEvents"
-                             ValueChanged="@FilterEventsByArchiveStatus"
+                <MudCheckBox T="bool"
+                             ValueChanged="FilterEventsByArchiveStatus"
                              Label="Show Archived Events" Color="Color.Primary" />
             </MudItem>
 
             <!-- Data Grid -->
             <MudItem xs="12">
-                <MudDataGrid @ref="@_dataGrid" T="VwEvent"
-                             Loading="@_isLoading" ReadOnly="true"
+                <MudDataGrid T="vwEvent" @ref="_dataGrid"
+                             Loading="_isLoading" ReadOnly="true"
                              Bordered="true" Dense="true" Striped="true" Hover="true"
                              Filterable="true" Groupable="true"
-                             ServerData="ServerReload"
-                             Class="mt-2">
+                             ServerData="ServerReload" Class="mt-2" >
                     <ToolBarContent>
                         <MudText Typo="Typo.h6">Results</MudText>
                         <MudSpacer />
-                        <MudTextField T="string" ValueChanged="@(s=>OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
-                                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                        <MudTextField T="string" ValueChanged="OnSearch" Placeholder="Search"
+                                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                                      IconSize="Size.Medium" Class="mt-0" />
                     </ToolBarContent>
                     <NoRecordsContent>
-                        <MudAlert Severity="Severity.Info" Class="my-2">@(_showArchivedEvents ? "No archived events found" : "No events found. Click \"Add New Event\" to create your first event.")</MudAlert>
+                        <MudAlert Severity="Severity.Info" Class="my-2">
+                            @(_showArchivedEvents
+                                ? "No archived events found"
+                                : "No events found. Click \"Add New Event\" to create your first event.")
+                        </MudAlert>
                     </NoRecordsContent>
-                    <LoadingContent>
-                        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-2" />
-                    </LoadingContent>
                     <Columns>
-                        <HierarchyColumn T="VwEvent" />
+                        <HierarchyColumn T="vwEvent" />
                         <PropertyColumn Property="x => x.Id" Hidden="true"/>
-                        <PropertyColumn Property="x => x.Reference" Title="Reference" Sortable="true" />
-                        <PropertyColumn Property="x => x.DealName" Title="Deal Name" Sortable="true" />
-                        <PropertyColumn Property="x => x.Event" Title="Event" Sortable="true" />
-                        <PropertyColumn Property="x => x.StartDate" Title="Start Date" Format="dd/MM/yyyy" Sortable="true" />
-                        <PropertyColumn Property="x => x.EndDate" Title="End Date" Format="dd/MM/yyyy" Sortable="true" />
-                        <PropertyColumn Property="x => x.ExpectedReturnDate" Title="Expected Return Date" Format="dd/MM/yyyy" Sortable="true" />
-                        <PropertyColumn Property="x => x.Days" Title="Days" Sortable="true" />
-                        <PropertyColumn Property="x => x.ExpectedTerminals" Title="Expected Terminals" Sortable="true" />
-                        <PropertyColumn Property="x => x.ConfirmedTerminals" Title="Confirmed Terminals" Sortable="true" />
-                        <TemplateColumn Title="Actions" >
+                        <PropertyColumn Property="x => x.Reference" Title="Reference" Sortable="true"/>
+                        <PropertyColumn Property="x => x.Deal_Name" Title="Deal Name" Sortable="true"/>
+                        <PropertyColumn Property="x => x.Event_Name" Title="Event" Sortable="true"/>
+                        <PropertyColumn Property="x => x.Deal_Status" Title="Deal Status" Sortable="true"/>
+                        <PropertyColumn Property="x => x.Hardware_Out_Date" Title="Hardware Out Date" Format="dd/MM/yyyy" Sortable="true"/>
+                        <PropertyColumn Property="x => x.Start_Date" Title="Start Date" Format="dd/MM/yyyy" Sortable="true"/>
+                        <PropertyColumn Property="x => x.End_Date" Title="End Date" Format="dd/MM/yyyy" Sortable="true"/>
+                        <PropertyColumn Property="x => x.Hardware_In_Date" Title="Hardware In Date" Format="dd/MM/yyyy" Sortable="true"/>
+                        <PropertyColumn Property="x => x.Expected_Return_Date" Title="Expected Return Date" Format="dd/MM/yyyy" Sortable="true"/>
+                        <PropertyColumn Property="x => x.Days" Title="Days" Sortable="true"/>
+                        <PropertyColumn Property="x => x.Expected_Terminals" Title="Expected Terminals" Sortable="true"/>
+                        <PropertyColumn Property="x => x.Confirmed_Terminals" Title="Confirmed Terminals" Sortable="true"/>
+                        <TemplateColumn Title="Actions" StickyRight="true">
                             <CellTemplate>
                                 <div class="d-flex gap-1">
                                     <MudTooltip Text="Edit">
                                         <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit"
-                                                       Color="Color.Primary"
-                                                       OnClick="@(() => EditEvent(context.Item.Id))"/>
+                                                       Color="Color.Primary" OnClick="@(() => EditEvent(context.Item.Id))"/>
                                     </MudTooltip>
                                     <MudTooltip Text="@(_showArchivedEvents ? "Un-Archive" : "Archive")">
-                                        <MudIconButton Size="Size.Small"
-                                                       Icon="@Icons.Material.Filled.Archive"
-                                                       Color="Color.Warning"
-                                                       OnClick="@(() => ConfirmArchive(context.Item.Id))"/>
+                                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Archive"
+                                                       Color="Color.Warning" OnClick="@(() => ConfirmArchive(context.Item.Id))"/>
                                     </MudTooltip>
                                     @if (_showArchivedEvents)
                                     {
                                         <MudTooltip Text="Delete Event">
-                                            <MudIconButton Size="Size.Small"
-                                                           Icon="@Icons.Material.Filled.Delete"
-                                                           Color="Color.Error"
-                                                           OnClick="@(() => ConfirmDelete(context.Item.Id))"/>
+                                            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete"
+                                                           Color="Color.Error" OnClick="@(() => ConfirmDelete(context.Item.Id))"/>
                                         </MudTooltip>
                                     }
                                 </div>
@@ -92,19 +92,10 @@
                     </Columns>
                     <ChildRowContent>
                         <MudGrid Class="px-2 py-1">
-                            @foreach (var field in new (string Label, object? Value)[]
-                                          {
-                                              ("Region", context.Item.Region),
-                                              ("Country", context.Item.Country),
-                                              ("Type of Operator", context.Item.TypeOfOperator),
-                                              ("Operator Name", context.Item.OperatorName),
-                                              ("Deal Status", context.Item.DealStatus),
-                                              ("Month", context.Item.Month),
-                                              ("Year", context.Item.StartDate?.ToString("yyyy"))
-                                          })
+                            @foreach (var field in GetChildRowFields(context.Item))
                             {
-                                <MudItem Style="width: auto; white-space: nowrap;">
-                                    <MudText Class="fw-bold text-primary" Style="font-weight: bold !important;">@field.Label:</MudText>
+                                <MudItem Style="width:auto; white-space:nowrap;">
+                                    <MudText Class="fw-bold text-primary" Style="font-weight:bold;">@field.Label:</MudText>
                                 </MudItem>
                                 <MudItem Class="flex-grow-1">
                                     <MudText>@field.Value</MudText>
@@ -115,14 +106,11 @@
                     <PagerContent>
                         <div class="d-flex gap-2 align-center">
                             <MudTooltip Text="Reset Grid State">
-                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Restore"
-                                               OnClick="@ResetGrid"/>
+                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Restore" OnClick="ResetGrid" />
                             </MudTooltip>
-                            <MudText Typo="Typo.body2">
-                                Total: @(_eventsList?.Count() ?? 0) events
-                            </MudText>
+                            <MudText Typo="Typo.body2">Total: @(_eventsList?.Count() ?? 0) events</MudText>
                             <MudSpacer />
-                            <MudDataGridPager T="VwEvent" PageSizeOptions="new int[] {10, 25, 50, 100}"/>
+                            <MudDataGridPager T="vwEvent" PageSizeOptions="new int[]{10,25,50,100}" />
                         </div>
                     </PagerContent>
                 </MudDataGrid>
@@ -131,96 +119,57 @@
     </MudPaper>
 </MudContainer>
 
+<!-- Terminal Availability Overlay -->
 <MudOverlay @bind-Visible="_isTerminalAvailabilityFormVisible" DarkBackground="true" AutoClose="false">
-    <MudPaper Class="mx-auto pa-6" Style="max-width: 1200px; width: 90%;" Elevation="4">
+    <MudPaper Class="mx-auto pa-6" Style="max-width:1200px; width:90%;" Elevation="4">
         <TerminalAvailabilityForm Entity="_availability" OnQuery="HandleQuery" OnCancel="HandleCancelQuery" />
     </MudPaper>
 </MudOverlay>
 
+<!-- Edit Event Overlay -->
 <MudOverlay @bind-Visible="_isEditFormVisible" DarkBackground="true" AutoClose="false">
-        <EventForm
-            Event="@_event"
-            CountryList="@_countryList"
-            OperatorTypeList="@_operatorTypeList"
-            OperatorList="@_operatorList"
-            DealStatusList="@_dealStatusList"
-            IsEditMode="@_isEditMode"
-            OnSubmit="HandleSaveEditChanges"
-            OnCancel="HandleCancelEditChanges" />
+    <EventForm Event="_event" IsEditMode="_isEditMode"
+               OnSubmit="HandleSaveEditChanges" OnCancel="HandleCancelEditChanges" />
 </MudOverlay>
 
 <!-- Add Event Overlay -->
 <MudOverlay @bind-Visible="_isAddFormVisible" DarkBackground="true" AutoClose="false">
-        <EventForm
-            Event="@_event"
-            CountryList="@_countryList"
-            OperatorTypeList="@_operatorTypeList"
-            OperatorList="@_operatorList"
-            DealStatusList="@_dealStatusList"
-            IsEditMode="@_isEditMode"
-            OnSubmit="HandleSaveNewEvent"
-            OnCancel="HandleCancelNewEvent" />
+    <EventForm Event="_event" IsEditMode="_isEditMode"
+               OnSubmit="HandleSaveNewEvent" OnCancel="HandleCancelNewEvent" />
 </MudOverlay>
 
 @code {
-    #region Member variables
-    private IEnumerable<VwEvent>? _eventsList;
+    #region Private Members
+    private IEnumerable<vwEvent>? _eventsList;
     private bool _isLoading = true;
-
     private bool _isEditFormVisible;
     private bool _isAddFormVisible;
     private bool _isTerminalAvailabilityFormVisible;
     private bool _showArchivedEvents;
-    
     private NoqEvent _event = new();
-
-    private IEnumerable<Country>? _countryList;
-    private IEnumerable<DealStatus>? _dealStatusList;
-    private IEnumerable<Operator>? _operatorList;
-    private IEnumerable<OperatorType>? _operatorTypeList;
-
     private string? _searchString;
-    
     private TerminalAvailabilityParameters _availability = new()
     {
         StartDate = DateTime.Today,
         EndDate = DateTime.Today.AddDays(30),
         TotalTerminals = 300
     };
-
     private bool _isEditMode;
-    private MudDataGrid<VwEvent>? _dataGrid;
-    
+    private MudDataGrid<vwEvent>? _dataGrid;
     #endregion
-    
-    #region Initialization
+
+    #region Lifecycle Methods
     protected override async Task OnInitializedAsync()
     {
         try
         {
             _isLoading = true;
-            
-            // Configure default snackbar settings
             ConfigureSnackbar();
-            
-            // Load data in parallel for better performance
-            var eventsTask = _eventsService.GetAllEventsAsync(_showArchivedEvents);
-            var countriesTask = _eventsService.GetAllCountriesAsync();
-            var dealStatusesTask = _eventsService.GetAllDealStatusesAsync();
-            var operatorsTask = _eventsService.GetAllOpearatorsAsync();
-            var operatorTypesTask = _eventsService.GetAllOpearatorTypesAsync();
-            
-            await Task.WhenAll(eventsTask, countriesTask, dealStatusesTask, operatorsTask, operatorTypesTask);
-            
-            _eventsList = await eventsTask;
-            _countryList = await countriesTask;
-            _dealStatusList = await dealStatusesTask;
-            _operatorList = await operatorsTask;
-            _operatorTypeList = await operatorTypesTask;
+            // Preload data if necessary
         }
         catch (Exception ex)
         {
-            _snackbar.Add("Failed to load data. Please try refreshing the page.", Severity.Error);
+            Snackbar.Add("Failed to load data. Please try refreshing the page.", Severity.Error);
             Console.WriteLine($"Error loading data: {ex.Message}");
         }
         finally
@@ -228,100 +177,102 @@
             _isLoading = false;
         }
     }
+    #endregion
 
+    #region Snackbar Configuration
     private void ConfigureSnackbar()
     {
-        _snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
-        _snackbar.Configuration.ShowCloseIcon = true;
-        _snackbar.Configuration.VisibleStateDuration = 5000; // 5 seconds
-        _snackbar.Configuration.ShowTransitionDuration = 300;
-        _snackbar.Configuration.HideTransitionDuration = 300;
-        _snackbar.Configuration.MaxDisplayedSnackbars = 3;
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+        Snackbar.Configuration.ShowCloseIcon = true;
+        Snackbar.Configuration.VisibleStateDuration = 5000;
+        Snackbar.Configuration.ShowTransitionDuration = 300;
+        Snackbar.Configuration.HideTransitionDuration = 300;
+        Snackbar.Configuration.MaxDisplayedSnackbars = 3;
     }
     #endregion
-    
-    #region Edit Event Form Methods
+
+    #region Edit Event Methods
     private async Task EditEvent(int id)
     {
-        try {
+        try
+        {
             _isLoading = true;
-            _event = (await _eventsService.GetEventByIdAsync(id)) ?? new NoqEvent();
+            _event = (await EventsService.GetEventByIdAsync(id)) ?? new NoqEvent();
             _isEditMode = true;
             _isEditFormVisible = true;
         }
-        catch (Exception ex) {
-            _snackbar.Add($"Unable to load event for editing. Please try again.", Severity.Error);
+        catch (Exception ex)
+        {
+            Snackbar.Add("Unable to load event for editing. Please try again.", Severity.Error);
             Console.WriteLine($"Error editing event: {ex.Message}");
         }
-        finally {
+        finally
+        {
             _isLoading = false;
         }
     }
 
     private async Task HandleSaveEditChanges()
     {
-        try {
+        try
+        {
             _isLoading = true;
-            
-            await _eventsService.UpdateEventAsync(_event.Id, _event);
-            
-            // Update the view model to reflect changes
-            //await RefreshEventsList();
+            await EventsService.UpdateEventAsync(_event.Id, _event);
             await _dataGrid!.ReloadServerData();
-            
             _isEditFormVisible = false;
-            
-            _snackbar.Add("Event updated successfully", Severity.Success);
+            Snackbar.Add("Event updated successfully", Severity.Success);
         }
-        catch (Exception ex) {
-            _snackbar.Add("Failed to update event. Please try again.", Severity.Error);
+        catch (Exception ex)
+        {
+            Snackbar.Add("Failed to update event. Please try again.", Severity.Error);
             Console.WriteLine($"Error saving changes: {ex.Message}");
         }
-        finally {
+        finally
+        {
             _isLoading = false;
         }
     }
-    
+
     private void HandleCancelEditChanges()
     {
         _isEditFormVisible = false;
-        _snackbar.Add("Edit canceled", Severity.Info);
+        Snackbar.Add("Edit canceled", Severity.Info);
     }
     #endregion
-    
-    #region Query Availability Methods
-    void ShowTerminalAvailabilityForm()
-    {
-        _isTerminalAvailabilityFormVisible = true;
-    }
+
+    #region Terminal Availability Methods
+    private void ShowTerminalAvailabilityForm() => _isTerminalAvailabilityFormVisible = true;
 
     private async Task HandleQuery()
     {
-        try {
+        try
+        {
             _isLoading = true;
-            _availability.DailyTerminalAvailability = await _eventsService.GetDailyTerminalAvailabilitiesBetweenDatesAsync(
-                _availability.StartDate, 
-                _availability.EndDate, 
+            _availability.DailyTerminalAvailability = await EventsService.GetDailyTerminalAvailabilitiesBetweenDatesAsync(
+                _availability.StartDate,
+                _availability.EndDate,
                 _availability.TotalTerminals);
-                
-            _snackbar.Add("Terminal availability data loaded successfully", Severity.Success);
+            Snackbar.Add("Terminal availability data loaded successfully", Severity.Success);
         }
-        catch (Exception ex) {
-            _snackbar.Add("Failed to query terminal availability. Please try again.", Severity.Error);
+        catch (Exception ex)
+        {
+            Snackbar.Add("Failed to query terminal availability. Please try again.", Severity.Error);
             Console.WriteLine($"Error querying availability: {ex.Message}");
         }
-        finally {
+        finally
+        {
             _isLoading = false;
         }
     }
-    
-    
+
+    private void HandleCancelQuery() => _isTerminalAvailabilityFormVisible = false;
     #endregion
 
-    #region Add Form Methods
+    #region Add Event Methods
     private void ShowAddEventForm()
     {
-        _event = new NoqEvent {
+        _event = new NoqEvent
+        {
             StartDate = DateTime.Today,
             EndDate = DateTime.Today.AddDays(1),
             ExpectedReturnDate = DateTime.Today.AddDays(2)
@@ -332,25 +283,22 @@
 
     private async Task HandleSaveNewEvent()
     {
-        try {
+        try
+        {
             _isLoading = true;
-            
             _event.IsArchived = false;
-            await _eventsService.AddEventAsync(_event);
-            
-            // Refresh the events list to include the new event
-            //await RefreshEventsList();
+            await EventsService.AddEventAsync(_event);
             await _dataGrid!.ReloadServerData();
-            
             _isAddFormVisible = false;
-            
-            _snackbar.Add("New event added successfully", Severity.Success);
+            Snackbar.Add("New event added successfully", Severity.Success);
         }
-        catch (Exception ex) {
-            _snackbar.Add("Failed to add new event. Please try again.", Severity.Error);
+        catch (Exception ex)
+        {
+            Snackbar.Add("Failed to add new event. Please try again.", Severity.Error);
             Console.WriteLine($"Error adding new event: {ex.Message}");
         }
-        finally {
+        finally
+        {
             _isLoading = false;
         }
     }
@@ -358,31 +306,29 @@
     private void HandleCancelNewEvent()
     {
         _isAddFormVisible = false;
-        _snackbar.Add("New event creation canceled", Severity.Info);
+        Snackbar.Add("New event creation canceled", Severity.Info);
     }
     #endregion
 
     #region Archive and Delete Methods
     private async Task ArchiveEvent(int itemId)
     {
-        try {
+        try
+        {
             _isLoading = true;
-            
-            await _eventsService.ArchiveEventAsync(itemId, !_showArchivedEvents);
-            
-            // Refresh the events list
-            //await RefreshEventsList();
+            await EventsService.ArchiveEventAsync(itemId, !_showArchivedEvents);
             await _dataGrid!.ReloadServerData();
-            
             string action = _showArchivedEvents ? "un-archived" : "archived";
-            _snackbar.Add($"Event {action} successfully", Severity.Success);
+            Snackbar.Add($"Event {action} successfully", Severity.Success);
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             string action = _showArchivedEvents ? "un-archive" : "archive";
-            _snackbar.Add($"Failed to {action} event. Please try again.", Severity.Error);
+            Snackbar.Add($"Failed to {action} event. Please try again.", Severity.Error);
             Console.WriteLine($"Error archiving event: {ex.Message}");
         }
-        finally {
+        finally
+        {
             _isLoading = false;
         }
     }
@@ -393,45 +339,36 @@
         {
             { "ContentText", _showArchivedEvents ? "Are you sure you want to un-archive this event?" : "Are you sure you want to archive this event?" },
             { "ButtonText", _showArchivedEvents ? "Un-Archive" : "Archive" },
-            { "CancelText", "Cancel"}
+            { "CancelText", "Cancel" }
         };
 
-        var options = new DialogOptions { 
-            CloseOnEscapeKey = true,
-            MaxWidth = MaxWidth.ExtraSmall
-        };
-        
-        var dialog = await _dialogService.ShowAsync<ConfirmationDialog>(
-            _showArchivedEvents ? "Confirm Un-Archive" : "Confirm Archive", 
-            parameters, 
-            options);
-            
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<ConfirmationDialog>(
+            _showArchivedEvents ? "Confirm Un-Archive" : "Confirm Archive",
+            parameters, options);
         var result = await dialog.Result;
-
-        if (!result!.Canceled)
+        if (!result.Canceled)
         {
             await ArchiveEvent(itemId);
         }
     }
 
-    private async Task DeleteEvent(int itemId) 
+    private async Task DeleteEvent(int itemId)
     {
-        try {
+        try
+        {
             _isLoading = true;
-            
-            await _eventsService.DeleteEventAsync(itemId);
-            
-            // Refresh the events list
-            //await RefreshEventsList();
+            await EventsService.DeleteEventAsync(itemId);
             await _dataGrid!.ReloadServerData();
-            
-            _snackbar.Add("Event permanently deleted", Severity.Success);
+            Snackbar.Add("Event permanently deleted", Severity.Success);
         }
-        catch (Exception ex) {
-            _snackbar.Add("Failed to delete event. Please try again.", Severity.Error);
+        catch (Exception ex)
+        {
+            Snackbar.Add("Failed to delete event. Please try again.", Severity.Error);
             Console.WriteLine($"Error deleting event: {ex.Message}");
         }
-        finally {
+        finally
+        {
             _isLoading = false;
         }
     }
@@ -445,19 +382,10 @@
             { "CancelText", "Cancel" }
         };
 
-        var options = new DialogOptions { 
-            CloseOnEscapeKey = true,
-            MaxWidth = MaxWidth.ExtraSmall
-        };
-        
-        var dialog = await _dialogService.ShowAsync<ConfirmationDialog>(
-            "Confirm Delete",
-            parameters, 
-            options);
-            
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Confirm Delete", parameters, options);
         var result = await dialog.Result;
-
-        if (!result!.Canceled)
+        if (!result.Canceled)
         {
             await DeleteEvent(itemId);
         }
@@ -467,29 +395,22 @@
     #region Helper Methods
     private async Task FilterEventsByArchiveStatus(bool archiveStatus)
     {
-        try {
+        try
+        {
             _isLoading = true;
             _showArchivedEvents = archiveStatus;
-            //await RefreshEventsList();
             await _dataGrid!.ReloadServerData();
-            
-            _snackbar.Add(_showArchivedEvents 
-                ? "Showing archived events" 
-                : "Showing active events", Severity.Info);
+            Snackbar.Add(_showArchivedEvents ? "Showing archived events" : "Showing active events", Severity.Info);
         }
-        catch (Exception ex) {
-            _snackbar.Add("Failed to filter events. Please try again.", Severity.Error);
+        catch (Exception ex)
+        {
+            Snackbar.Add("Failed to filter events. Please try again.", Severity.Error);
             Console.WriteLine($"Error filtering events: {ex.Message}");
         }
-        finally {
+        finally
+        {
             _isLoading = false;
         }
-    }
-
-    private async Task RefreshEventsList()
-    {
-        _eventsList = await _eventsService.GetAllEventsAsync(_showArchivedEvents);
-        StateHasChanged();
     }
 
     private async Task ResetGrid()
@@ -497,70 +418,57 @@
         if (_dataGrid != null)
         {
             await _dataGrid.ClearFiltersAsync();
-
-            var properties = typeof(VwEvent).GetProperties();
-            foreach (var property in properties)
+            foreach (var property in typeof(vwEvent).GetProperties())
             {
                 await _dataGrid.RemoveSortAsync(property.Name);
             }
-            
-            _snackbar.Add("Grid filters have been reset", Severity.Info);
+            Snackbar.Add("Grid filters have been reset", Severity.Info);
         }
     }
     #endregion
 
-    private void HandleCancelQuery()
+    private Task OnSearch(string search)
     {
-        _isTerminalAvailabilityFormVisible = false;
-    }
-    
-    private Task OnSearch(string s)
-    {
-        _searchString = s;
+        _searchString = search;
         return _dataGrid!.ReloadServerData();
     }
 
-    private async Task<GridData<VwEvent>> ServerReload(GridState<VwEvent> state)
+    private async Task<GridData<vwEvent>> ServerReload(GridState<vwEvent> state)
     {
-        _eventsList = await _eventsService.GetAllEventsAsync(_showArchivedEvents);
-        if(!string.IsNullOrEmpty(_searchString) && _eventsList!.Count() > 0)
-            _eventsList = _eventsList!.Where(ev => (ev.DealName is not null && ev.DealName.Contains(_searchString, StringComparison.InvariantCultureIgnoreCase)) || (ev.Event is not null && ev.Event.Contains(_searchString, StringComparison.InvariantCultureIgnoreCase)) );
-        
-        // _eventsList = _eventsList.Where(ev =>
-        // {
-        //     if (string.IsNullOrWhiteSpace(_searchString))
-        //         return true;
-        //     if (ev.DealName.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
-        //         return true;
-        //     if (ev.Event.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
-        //         return true;
-        //     return false;
-        // }).ToArray();
-        
-        var sortDefinition = state.SortDefinitions.FirstOrDefault();
-        if(sortDefinition != null)
+        _eventsList = await EventsService.GetAllEventsAsync(_showArchivedEvents);
+        if (!string.IsNullOrEmpty(_searchString) && _eventsList != null)
         {
-            var properties = typeof(VwEvent).GetProperties();
-            _eventsList = _eventsList!.OrderByDirection(sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
-                e => e.GetType().GetProperty(sortDefinition.SortBy).GetValue(e));
-            
+            _eventsList = _eventsList.Where(ev =>
+                (!string.IsNullOrEmpty(ev.Deal_Name) && ev.Deal_Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrEmpty(ev.Event_Name) && ev.Event_Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            ).ToList();
         }
-        
-        var totalItems = _eventsList!.Count();
-        IEnumerable<VwEvent> pagedData = Enumerable.Empty<VwEvent>();
-        
-        if (totalItems > 0)
+        var sortedItems = _eventsList;
+        if (state.SortDefinitions.Any())
         {
-            pagedData = _eventsList!.Skip(state.Page * state.PageSize).Take(state.PageSize);
+            var sortDefinition = state.SortDefinitions.First();
+            var propertyInfo = typeof(vwEvent).GetProperty(sortDefinition.SortBy);
+            if (propertyInfo != null)
+            {
+                sortedItems = sortDefinition.Descending
+                    ? _eventsList.OrderByDescending(e => propertyInfo.GetValue(e, null)).ToList()
+                    : _eventsList.OrderBy(e => propertyInfo.GetValue(e, null)).ToList();
+            }
         }
-
-        //_dataGrid.Items = pagedData;
-        
-        return new GridData<VwEvent>
-        {
-            TotalItems = totalItems,
-            Items = pagedData
-        };
+        var totalItems = sortedItems?.Count() ?? 0;
+        var pagedItems = sortedItems?.Skip(state.Page * state.PageSize).Take(state.PageSize).ToList() ?? new List<vwEvent>();
+        return new GridData<vwEvent> { TotalItems = totalItems, Items = pagedItems };
     }
 
+    private IEnumerable<(string Label, object? Value)> GetChildRowFields(vwEvent item)
+    {
+        return new (string Label, object? Value)[]
+        {
+            ("Country", item.Country),
+            ("Type of Operator", item.Operator_Type),
+            ("Operator Name", item.Operator_Name),
+            ("Month", item.Month),
+            ("Year", item.Start_Date?.ToString("yyyy"))
+        };
+    }
 }
