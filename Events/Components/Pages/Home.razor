@@ -2,6 +2,9 @@
 
 @using System.Threading.Tasks
 @using System.Linq
+@using System.Linq.Expressions
+@using System.Reflection
+@using System.Resources
 @using MudBlazor
 @inject EventsService EventsService
 @inject IDialogService DialogService
@@ -443,6 +446,20 @@
                 (!string.IsNullOrEmpty(ev.Event_Name) && ev.Event_Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
             ).ToList();
         }
+        
+        var filteredData = _eventsList;
+        if (state.FilterDefinitions.Any())
+        {
+            foreach(var filter in state.FilterDefinitions)
+            {
+                // if (filter.Value is not null)
+                // {
+                    filteredData = ApplyFilter(filteredData, filter);
+//                }
+            }
+        }
+        _eventsList = filteredData;
+        
         var sortedItems = _eventsList;
         if (state.SortDefinitions.Any())
         {
@@ -458,6 +475,133 @@
         var totalItems = sortedItems?.Count() ?? 0;
         var pagedItems = sortedItems?.Skip(state.Page * state.PageSize).Take(state.PageSize).ToList() ?? new List<vwEvent>();
         return new GridData<vwEvent> { TotalItems = totalItems, Items = pagedItems };
+    } 
+    
+    private IEnumerable<vwEvent> ApplyFilter(IEnumerable<vwEvent> data, IFilterDefinition<vwEvent> filter)
+    {
+        var propertyName = filter.Column.PropertyName;
+        var filterValue = filter.Value?.ToString();
+        var propertyInfo = typeof(vwEvent).GetProperty(propertyName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+
+        // if (propertyInfo == null || propertyInfo.PropertyType != typeof(string))
+        // {
+        //     // Handle unsupported property or type (e.g., log a warning)
+        //     return data;
+        // }
+
+        var parameter = Expression.Parameter(typeof(vwEvent), "x");
+        var property = Expression.Property(parameter, propertyInfo);
+        var constant = Expression.Constant(filterValue, filter.FieldType.InnerType);
+
+        Expression body = null;
+        switch (filter.FieldType.InnerType.Name)
+        {
+            case "String":
+                data = ApplyStringFilter(data, filter, body, parameter, property, constant);
+                break;
+                
+            case "Boolean":
+                data = ApplyBooleanFilter(data, filter, body, parameter, property, constant);
+                break;
+                
+            case "DateTime":
+                data = ApplyDateFilter(data, filter, body, parameter, property, constant);
+                break;
+        }
+        
+        return data;
+    }
+
+    private IEnumerable<vwEvent> ApplyDateFilter(IEnumerable<vwEvent> data, IFilterDefinition<vwEvent> filter, Expression? body, ParameterExpression parameter, MemberExpression property, ConstantExpression constant)
+    {
+        switch (filter.Operator)
+        {
+            case FilterOperator.DateTime.Empty:
+                body = Expression.Equal(property, Expression.Constant(null, typeof(DateTime)));
+                break;
+            case FilterOperator.DateTime.NotEmpty:
+                body = Expression.NotEqual(property, Expression.Constant(null, typeof(DateTime)));
+                break;
+            case FilterOperator.DateTime.Before:
+                body = Expression.LessThan(property, constant);
+                break;
+            case FilterOperator.DateTime.After:
+                body = Expression.GreaterThan(property, constant);
+                break;
+            case FilterOperator.DateTime.Is:
+                body = Expression.Equal(property, constant);
+                break;
+            case FilterOperator.DateTime.IsNot:
+                body = Expression.NotEqual(property, constant);
+                break;
+            case FilterOperator.DateTime.OnOrBefore:
+                body = Expression.LessThanOrEqual(property, constant);
+                break;
+            case FilterOperator.DateTime.OnOrAfter:
+                body = Expression.GreaterThanOrEqual(property, constant);
+                break;
+        }
+        
+        if (body == null) return data;
+        
+        var lambda = Expression.Lambda<Func<vwEvent, bool>>(body, parameter);
+        data = data.Where(lambda.Compile());
+
+        return data;
+    }
+
+    private IEnumerable<vwEvent> ApplyBooleanFilter(IEnumerable<vwEvent> data, IFilterDefinition<vwEvent> filter, Expression? body, ParameterExpression parameter, MemberExpression property, ConstantExpression constant)
+    {
+        BinaryExpression equalsExpression = Expression.Equal(property, constant);
+        var lambda = Expression.Lambda<Func<vwEvent, bool>>(equalsExpression, parameter);
+        data = data.Where(lambda.Compile());
+        return data;
+    }
+
+    private IEnumerable<vwEvent> ApplyStringFilter(IEnumerable<vwEvent> data, IFilterDefinition<vwEvent> filter, Expression body, ParameterExpression parameter, MemberExpression property, ConstantExpression constant)
+    {
+        switch (filter.Operator)
+        {
+            case FilterOperator.String.Contains:
+                var containsMethod = typeof(string).GetMethod("Contains", new[] { typeof(string), typeof(StringComparison) });
+                body = Expression.Call(property, containsMethod, constant, Expression.Constant(StringComparison.OrdinalIgnoreCase));
+                break;
+            case FilterOperator.String.NotContains:
+                var notContainsMethod = typeof(string).GetMethod("Contains", new[] { typeof(string), typeof(StringComparison) });
+                body = Expression.Not(Expression.Call(property, notContainsMethod, constant, Expression.Constant(StringComparison.OrdinalIgnoreCase)));
+                break;
+            case FilterOperator.String.StartsWith:
+                var startsWithMethod = typeof(string).GetMethod("StartsWith", new[] { typeof(string), typeof(StringComparison) });
+                body = Expression.Call(property, startsWithMethod, constant, Expression.Constant(StringComparison.OrdinalIgnoreCase));
+                break;
+            case FilterOperator.String.EndsWith:
+                var endsWithMethod = typeof(string).GetMethod("EndsWith", new[] { typeof(string), typeof(StringComparison) });
+                body = Expression.Call(property, endsWithMethod, constant, Expression.Constant(StringComparison.OrdinalIgnoreCase));
+                break;
+            case FilterOperator.String.Equal:
+                var equalsMethod = typeof(string).GetMethod("Equals", new[] { typeof(string), typeof(StringComparison) });
+                body = Expression.Call(property, equalsMethod, constant, Expression.Constant(StringComparison.OrdinalIgnoreCase));
+                break;
+            case FilterOperator.String.NotEqual:
+                var notEqualsMethod = typeof(string).GetMethod("Equals", new[] { typeof(string), typeof(StringComparison) });
+                body = Expression.Not(Expression.Call(property, notEqualsMethod, constant, Expression.Constant(StringComparison.OrdinalIgnoreCase)));
+                break;
+            case FilterOperator.String.Empty:
+                var isNullOrEmptyMethod = typeof(string).GetMethod("IsNullOrEmpty", new[] { typeof(string) });
+                body = Expression.Call(isNullOrEmptyMethod, property);
+                break;
+            case FilterOperator.String.NotEmpty:
+                var isNotNullOrEmptyMethod = typeof(string).GetMethod("IsNullOrEmpty", new[] { typeof(string) });
+                body = Expression.Not(Expression.Call(isNotNullOrEmptyMethod, property));
+                break;
+        }
+        
+        if (body == null) return data;
+        
+        var lambda = Expression.Lambda<Func<vwEvent, bool>>(body, parameter);
+        data = data.Where(lambda.Compile());
+
+        return data;
     }
 
     private IEnumerable<(string Label, object? Value)> GetChildRowFields(vwEvent item)
