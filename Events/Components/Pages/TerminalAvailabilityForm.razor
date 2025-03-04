@@ -24,24 +24,26 @@
         {
             <MudItem xs="12">
                 <MudPaper Class="pa-2" Style="overflow-x:auto;">
-                    <MudDataGrid T="DailyTerminalAvailability" 
+                    <div style="max-height: 430px; overflow-y: auto;">
+                        <MudDataGrid T="DailyTerminalAvailability"
                                  Items="Entity!.DailyTerminalAvailability"
-                                 ReadOnly="true" 
-                                 Bordered="true" 
-                                 Dense="true" 
-                                 Striped="true" 
+                                 ReadOnly="true"
+                                 Bordered="true"
+                                 Dense="true"
+                                 Striped="true"
                                  Hover="true">
                         <Columns>
-                            <PropertyColumn Property="x => x.Date" Title="Date" />
-                            <PropertyColumn Property="x => x.TotalExpectedAssigned" Title="Total Expected Assigned" />
-                            <PropertyColumn Property="x => x.TotalExpectedAvailable" Title="Total Expected Available" />
-                            <PropertyColumn Property="x => x.TotalConfirmedAssigned" Title="Total Confirmed Assigned" />
-                            <PropertyColumn Property="x => x.TotalConfirmedAvailable" Title="Total Confirmed Available" />
+                            <PropertyColumn Property="x => x.Date" Title="Date"  Format="dd/MM/yyyy"/>
+                            <PropertyColumn Property="x => x.TotalExpectedAssigned" Title="Total Expected Assigned"/>
+                            <PropertyColumn Property="x => x.TotalExpectedAvailable" Title="Total Expected Available"/>
+                            <PropertyColumn Property="x => x.TotalConfirmedAssigned" Title="Total Confirmed Assigned"/>
+                            <PropertyColumn Property="x => x.TotalConfirmedAvailable" Title="Total Confirmed Available"/>
                         </Columns>
                         <PagerContent>
-                            <MudDataGridPager T="DailyTerminalAvailability" />
+                            <MudDataGridPager T="DailyTerminalAvailability"/>
                         </PagerContent>
                     </MudDataGrid>
+                    </div>
                 </MudPaper>
             </MudItem>
         }

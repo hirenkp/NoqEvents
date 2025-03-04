@@ -15,13 +15,13 @@
             {
                 <!-- Text Fields -->
                 <MudItem xs="12">
-                    <MudTextField @bind-Value="Event.Reference" For="@(() => Event.Reference)" Label="Reference" Dense="true" />
+                    <MudTextField @bind-Value="Event.Reference" For="@(() => Event.Reference)" Label="Reference" dense="true" />
                 </MudItem>
                 <MudItem xs="12">
-                    <MudTextField @bind-Value="Event.Deal_Name" For="@(() => Event.Deal_Name)" Label="Deal Name" Dense="true" />
+                    <MudTextField @bind-Value="Event.Deal_Name" For="@(() => Event.Deal_Name)" Label="Deal Name" dense="true" />
                 </MudItem>
                 <MudItem xs="12">
-                    <MudTextField @bind-Value="Event.Event" For="@(() => Event.Event)" Label="Event Name" Required="true" Dense="true" />
+                    <MudTextField @bind-Value="Event.Event" For="@(() => Event.Event)" Label="Event Name" Required="true" dense="true" />
                 </MudItem>
 
                 <!-- Country/Region Select -->
@@ -34,7 +34,7 @@
                                      ToStringFunc="@(c => c?.Country1)"
                                      MaxItems="10"
                                      Clearable="true"
-                                     Dense="true">
+                                     dense="true">
                     </MudAutocomplete>
                 </MudItem>
                 <MudItem xs="1">
@@ -56,7 +56,7 @@
                                      ToStringFunc="@(o => o?.Type)"
                                      MaxItems="10"
                                      Clearable="true"
-                                     Dense="true">
+                                     dense="true">
                     </MudAutocomplete>
                 </MudItem>
                 <MudItem xs="1">
@@ -78,7 +78,7 @@
                                      ToStringFunc="@(o => o?.Name)"
                                      MaxItems="10"
                                      Clearable="true"
-                                     Dense="true">
+                                     dense="true">
                     </MudAutocomplete>
                 </MudItem>
                 <MudItem xs="1">
@@ -100,7 +100,7 @@
                                      ToStringFunc="@(ds => ds?.Status)"
                                      MaxItems="10"
                                      Clearable="true"
-                                     Dense="true">
+                                     dense="true">
                     </MudAutocomplete>
                 </MudItem>
                 <MudItem xs="1">
@@ -116,10 +116,10 @@
                 <MudItem xs="12">
                     <MudHidden Breakpoint="Breakpoint.SmAndUp">
                         <!-- Mobile: Separate Date Pickers -->
-                        <MudDatePicker @bind-Date="Event.Hardware_Out_Date" Placeholder="Select HW Out Date" Editable="true" Required="true" DateFormat="dd/MM/yyyy" Dense="true" />
-                        <MudDatePicker @bind-Date="Event.Hardware_In_Date" Placeholder="Select HW In Date" Editable="true" Required="true" DateFormat="dd/MM/yyyy" Class="mt-3" Dense="true" />
-                        <MudDatePicker @bind-Date="Event.StartDate" Label="Start Date" Placeholder="Select Start Date" Editable="true" Required="true" DateFormat="dd/MM/yyyy" Dense="true" />
-                        <MudDatePicker @bind-Date="Event.EndDate" Label="End Date" Placeholder="Select End Date" Editable="true" Required="true" DateFormat="dd/MM/yyyy" Class="mt-3" Dense="true" />
+                        <MudDatePicker @bind-Date="Event.Hardware_Out_Date" Placeholder="Select HW Out Date" Editable="true" Required="true" DateFormat="dd/MM/yyyy" dense="true" />
+                        <MudDatePicker @bind-Date="Event.Hardware_In_Date" Placeholder="Select HW In Date" Editable="true" Required="true" DateFormat="dd/MM/yyyy" Class="mt-3" dense="true" />
+                        <MudDatePicker @bind-Date="Event.StartDate" Label="Start Date" Placeholder="Select Start Date" Editable="true" Required="true" DateFormat="dd/MM/yyyy" dense="true" />
+                        <MudDatePicker @bind-Date="Event.EndDate" Label="End Date" Placeholder="Select End Date" Editable="true" Required="true" DateFormat="dd/MM/yyyy" Class="mt-3" dense="true" />
                     </MudHidden>
                     <MudHidden Breakpoint="Breakpoint.Xs">
                         <!-- Desktop: Date Range Pickers -->
@@ -134,7 +134,7 @@
                                             PlaceholderEnd="HW In Date"
                                             DateFormat="dd/MM/yyyy"
                                             Label="Hardware Lease Dates"
-                                            Dense="true" />
+                                            dense="true" />
                         <MudDateRangePicker @ref="_eventDateRangePicker"
                                             DateRange="_dateEventRange"
                                             Margin="Margin.Dense"
@@ -147,21 +147,21 @@
                                             DateFormat="dd/MM/yyyy"
                                             Label="Event Dates"
                                             DateRangeChanged="@OnDateRangeChanged"
-                                            Dense="true" />
+                                            dense="true" />
                     </MudHidden>
                 </MudItem>
 
                 <!-- Expected Return Date -->
                 <MudItem xs="12">
-                    <MudDatePicker @bind-Date="Event.ExpectedReturnDate" Label="Expected Return Date" Placeholder="Select Date" Editable="true" Required="true" DateFormat="dd/MM/yyyy" Dense="true" />
+                    <MudDatePicker @bind-Date="Event.ExpectedReturnDate" Label="Expected Return Date" Placeholder="Select Date" Editable="true" Required="true" DateFormat="dd/MM/yyyy" dense="true" />
                 </MudItem>
 
                 <!-- Numeric Fields -->
                 <MudItem xs="12">
-                    <MudNumericField @bind-Value="Event.ExpectedTerminals" Label="Expected Terminals" Required="true" Dense="true" />
+                    <MudNumericField @bind-Value="Event.ExpectedTerminals" Label="Expected Terminals" Required="true" dense="true" />
                 </MudItem>
                 <MudItem xs="12">
-                    <MudNumericField @bind-Value="Event.ConfirmedTerminals" Label="Confirmed Terminals" Required="true" Dense="true" />
+                    <MudNumericField @bind-Value="Event.ConfirmedTerminals" Label="Confirmed Terminals" Required="true" dense="true" />
                 </MudItem>
 
                 <!-- Action Buttons -->
@@ -193,7 +193,7 @@
     public NoqEvent Event { get; set; } = new NoqEvent();
 
     // Lookup lists for dropdowns.
-    public IEnumerable<Country>? CountryList { get; set; }
+    public List<Country?>? CountryList { get; set; }
     public IEnumerable<OperatorType>? OperatorTypeList { get; set; }
     public IEnumerable<Operator>? OperatorList { get; set; }
     public IEnumerable<DealStatus>? DealStatusList { get; set; }
@@ -236,7 +236,7 @@
 
         await Task.WhenAll(countriesTask, dealStatusesTask, operatorsTask, operatorTypesTask);
 
-        CountryList = await countriesTask;
+        CountryList = (List<Country?>?)await countriesTask;
         DealStatusList = await dealStatusesTask;
         OperatorList = await operatorsTask;
         OperatorTypeList = await operatorTypesTask;
@@ -247,6 +247,7 @@
         _selectedDealStatus = DealStatusList?.FirstOrDefault(ds => ds.Id == Event.DealStatusId);
 
         _dateEventRange = new DateRange(Event.StartDate, Event.EndDate);
+        _dateHardwareDateRange = new DateRange(Event.Hardware_Out_Date, Event.Hardware_In_Date);
 
         _isLoading = false;
     }
@@ -257,10 +258,10 @@
         if (_form.IsValid)
         {
             _showValidationErrors = false;
-            Event.CountryId = _selectedCountry!.Id;
-            Event.OperatorId = _selectedOperator!.Id;
-            Event.DealStatusId = _selectedDealStatus!.Id;
-            Event.OperatorTypeId = _selectedOperatorType!.Id;
+            Event.CountryId = _selectedCountry?.Id;
+            Event.OperatorId = _selectedOperator?.Id;
+            Event.DealStatusId = _selectedDealStatus?.Id;
+            Event.OperatorTypeId = _selectedOperatorType?.Id;
             Event.StartDate = _dateEventRange?.Start;
             Event.EndDate = _dateEventRange?.End;
             Event.Hardware_Out_Date = _dateHardwareDateRange?.Start;
@@ -349,29 +350,29 @@
         var dialog = await DialogService.ShowAsync<AddItemDialog>("Add New Item", parameters);
         var result = await dialog.Result;
 
-        if (!result.Canceled && result.Data != null)
+        if (!result!.Canceled && result.Data != null)
         {
             switch (eventAttributeName)
             {
                 case "Country":
                     _selectedCountry = (Country?)result.Data;
                     CountryList = CountryList!.Concat(new[] { _selectedCountry }).ToList();
-                    await EventsService.AddCountryAsync(_selectedCountry);
+                    await EventsService.AddCountryAsync(_selectedCountry!);
                     break;
                 case "DealStatus":
                     _selectedDealStatus = (DealStatus?)result.Data;
-                    DealStatusList = DealStatusList!.Concat(new[] { _selectedDealStatus }).ToList();
-                    await EventsService.AddDealStatusAsync(_selectedDealStatus);
+                    DealStatusList = DealStatusList!.Concat(new[] { _selectedDealStatus }).ToList()!;
+                    await EventsService.AddDealStatusAsync(_selectedDealStatus!);
                     break;
                 case "OperatorType":
                     _selectedOperatorType = (OperatorType?)result.Data;
                     OperatorTypeList = OperatorTypeList!.Concat(new[] { _selectedOperatorType }).ToList();
-                    await EventsService.AddOperatorTypeAsync(_selectedOperatorType);
+                    await EventsService.AddOperatorTypeAsync(_selectedOperatorType!);
                     break;
                 case "Operator":
                     _selectedOperator = (Operator?)result.Data;
                     OperatorList = OperatorList!.Concat(new[] { _selectedOperator }).ToList();
-                    await EventsService.AddOperatorAsync(_selectedOperator);
+                    await EventsService.AddOperatorAsync(_selectedOperator!);
                     break;
             }
         }
