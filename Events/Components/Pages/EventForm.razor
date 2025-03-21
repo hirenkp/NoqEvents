@@ -241,7 +241,7 @@
         OperatorList = await operatorsTask;
         OperatorTypeList = await operatorTypesTask;
 
-        _selectedCountry = CountryList?.FirstOrDefault(c => c.Id == Event.CountryId);
+        _selectedCountry = CountryList?.FirstOrDefault(c => c!.Id == Event.CountryId);
         _selectedOperatorType = OperatorTypeList?.FirstOrDefault(ot => ot.Id == Event.OperatorTypeId);
         _selectedOperator = OperatorList?.FirstOrDefault(o => o.Id == Event.OperatorId);
         _selectedDealStatus = DealStatusList?.FirstOrDefault(ds => ds.Id == Event.DealStatusId);

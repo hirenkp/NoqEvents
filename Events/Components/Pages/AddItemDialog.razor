@@ -1,0 +1,126 @@
+﻿@using System.Reflection
+
+<MudDialog>
+    <DialogContent>
+        <MudGrid Spacing="2">
+            @if (ObjectToEdit != null)
+            {
+                @foreach (var property in ObjectToEdit.GetType().GetProperties())
+                {
+                    var propertyType = property.PropertyType;
+                    var propertyName = property.Name;
+                    var propertyValue = property.GetValue(ObjectToEdit);
+
+                    <MudItem xs="12">
+                        @if (propertyType == typeof(string))
+                        {
+                            <MudTextField Label="@propertyName" @bind-Value="_stringValues[propertyName]" fullWidth="true" />
+                        }
+                        else if (propertyType == typeof(int) || propertyType == typeof(int?))
+                        {
+                            <MudNumericField Label="@propertyName" @bind-Value="_intValues[propertyName]" fullWidth="true" />
+                        }
+                        else if (propertyType == typeof(double) || propertyType == typeof(double?))
+                        {
+                            <MudNumericField Label="@propertyName" @bind-Value="_doubleValues[propertyName]" fullWidth="true" />
+                        }
+                        else if (propertyType == typeof(DateTime) || propertyType == typeof(DateTime?))
+                        {
+                            <MudDatePicker Label="@propertyName" @bind-Date="_dateTimeValues[propertyName]" fullWidth="true" />
+                        }
+                        else if (propertyType == typeof(bool) || propertyType == typeof(bool?))
+                        {
+                            <MudCheckBox T="bool" Label="@propertyName" @bind-Checked="_boolValues[propertyName]" />
+                        }
+                        @* Add more types as needed (e.g., decimal, enum, etc.) *@
+                    </MudItem>
+                }
+            }
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" FullWidth="true" Class="mb-2">Submit</MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="Cancel" FullWidth="true">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance? MudDialog { get; set; }
+
+    [Parameter] public object? ObjectToEdit { get; set; }
+
+    private Dictionary<string, string> _stringValues = new Dictionary<string, string>();
+    private Dictionary<string, int?> _intValues = new Dictionary<string, int?>();
+    private Dictionary<string, double?> _doubleValues = new Dictionary<string, double?>();
+    private Dictionary<string, DateTime?> _dateTimeValues = new Dictionary<string, DateTime?>();
+    private readonly Dictionary<string, bool?> _boolValues = new Dictionary<string, bool?>();
+
+    protected override void OnInitialized()
+    {
+        if (ObjectToEdit != null)
+        {
+            foreach (var property in ObjectToEdit.GetType().GetProperties())
+            {
+                var propertyName = property.Name;
+                var propertyValue = property.GetValue(ObjectToEdit);
+
+                if (property.PropertyType == typeof(string))
+                {
+                    _stringValues[propertyName] = propertyValue?.ToString()!;
+                }
+                else if (property.PropertyType == typeof(int) || property.PropertyType == typeof(int?))
+                {
+                    _intValues[propertyName] = (int?)propertyValue;
+                }
+                else if (property.PropertyType == typeof(double) || property.PropertyType == typeof(double?))
+                {
+                    _doubleValues[propertyName] = (double?)propertyValue;
+                }
+                else if (property.PropertyType == typeof(DateTime) || property.PropertyType == typeof(DateTime?))
+                {
+                    _dateTimeValues[propertyName] = (DateTime?)propertyValue;
+                }
+                else if (property.PropertyType == typeof(bool) || property.PropertyType == typeof(bool?))
+                {
+                    _boolValues[propertyName] = (bool?)propertyValue;
+                }
+            }
+        }
+    }
+
+    void Submit()
+    {
+        if (ObjectToEdit != null)
+        {
+            foreach (var property in ObjectToEdit.GetType().GetProperties())
+            {
+                var propertyName = property.Name;
+                var propertyType = property.PropertyType;
+
+                if (propertyType == typeof(string))
+                {
+                    property.SetValue(ObjectToEdit, _stringValues[propertyName]);
+                }
+                else if (propertyType == typeof(int) || propertyType == typeof(int?))
+                {
+                    property.SetValue(ObjectToEdit, _intValues[propertyName]);
+                }
+                else if (propertyType == typeof(double) || propertyType == typeof(double?))
+                {
+                    property.SetValue(ObjectToEdit, _doubleValues[propertyName]);
+                }
+                else if (propertyType == typeof(DateTime) || propertyType == typeof(DateTime?))
+                {
+                    property.SetValue(ObjectToEdit, _dateTimeValues[propertyName]);
+                }
+                else if (propertyType == typeof(bool) || propertyType == typeof(bool?))
+                {
+                    property.SetValue(ObjectToEdit, _boolValues[propertyName]);
+                }
+            }
+        }
+        MudDialog.Close(DialogResult.Ok(ObjectToEdit));
+    }
+
+    void Cancel() => MudDialog.Cancel();
+}
