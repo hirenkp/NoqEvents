@@ -3,6 +3,7 @@ using Events.Context;
 using Events.Models;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using MySql.Data.MySqlClient;
 
 namespace Events.Services;
 
@@ -150,10 +151,13 @@ public class EventsService
         List<DailyTerminalAvailability> resultList = new List<DailyTerminalAvailability>();
         using (var command = db.Database.GetDbConnection().CreateCommand())
         {
-            command.CommandText = "[dbo].[spGetTerminalAvailabilityByDateRange]";
-            command.Parameters.Add(new SqlParameter("@startDate", startDate));
-            command.Parameters.Add(new SqlParameter("@endDate", endDate));
-            command.Parameters.Add(new SqlParameter("@totalTerminals", totalTerminals));
+            command.CommandText = "spGetTerminalAvailabilityByDateRange";
+            // command.Parameters.Add(new SqlParameter("@startDate", startDate));
+            // command.Parameters.Add(new SqlParameter("@endDate", endDate));
+            // command.Parameters.Add(new SqlParameter("@totalTerminals", totalTerminals));
+            command.Parameters.Add(new MySqlParameter("StartDate", startDate));
+            command.Parameters.Add(new MySqlParameter("EndDate", endDate));
+            command.Parameters.Add(new MySqlParameter("TotalTerminals", totalTerminals));
             command.CommandType = CommandType.StoredProcedure;
             
             db.Database.OpenConnection();

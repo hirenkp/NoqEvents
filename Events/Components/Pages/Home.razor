@@ -203,6 +203,12 @@
         {
             _isLoading = true;
             _event = (await EventsService.GetEventByIdAsync(id)) ?? new NoqEvent();
+            if (_event.Hardware_In_Date == DateTime.MinValue)
+                _event.Hardware_In_Date = null;
+
+            if (_event.Hardware_Out_Date == DateTime.MinValue)
+                _event.Hardware_Out_Date = null;
+            
             _isEditMode = true;
             _isEditFormVisible = true;
         }
@@ -476,6 +482,18 @@
         }
         var totalItems = sortedItems?.Count() ?? 0;
         var pagedItems = sortedItems?.Skip(state.Page * state.PageSize).Take(state.PageSize).ToList() ?? new List<vwEvent>();
+        pagedItems.ForEach(ev =>
+        {
+            if (ev.Hardware_In_Date == DateTime.MinValue)
+            {
+                ev.Hardware_In_Date = null;
+            }
+            if (ev.Hardware_Out_Date == DateTime.MinValue)
+            {
+                ev.Hardware_Out_Date = null;
+            }
+        });
+        
         return new GridData<vwEvent> { TotalItems = totalItems, Items = pagedItems };
     } 
     

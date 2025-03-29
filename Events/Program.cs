@@ -24,7 +24,7 @@ var connectionString = string.IsNullOrEmpty(environmentConnectionString) ? defau
 
 builder.Services.AddDbContextFactory<EventsDbContext>(options =>
 {
-    options.UseSqlServer(connectionString);
+    options.UseMySQL(connectionString);
 });
 
 builder.Services.AddMudServices(config => {
